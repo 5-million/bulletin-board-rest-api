@@ -12,13 +12,17 @@ stack
 
 요구사항
 
-모든 응답은 `ApiResult<T>`객체를 통해 이루어진다.
+모든 응답은 `ApiResult<T>`객체를 통해 이루어진다.  
+이를 위해 `ApiUtil` 클래스를 구현하며 `success` 함수와 `fail` 함수를 구현한다. 두 함수의 리턴은 `ApiResult<T>`이고 `fail`함수는 ControllerAdvice에서만 사용된다. 
 
 ```java
-interface ApiResult<T> {
+class ApiResult<T> {
     HttpStatus status;
-    boolean success;
     T response;
+    ApiError error;
+}
+
+class ApiError {
     String message;
 }
 ```
