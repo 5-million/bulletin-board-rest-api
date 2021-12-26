@@ -41,12 +41,13 @@ Swagger
 
 1. users
 
-   |    field     |     type     | null | key  | default | extra |                 desc                 |
-   | :----------: | :----------: | :--: | :--: | :-----: | :---: | :----------------------------------: |
-   |      id      | varchar(30)  |  no  |  pk  |  null   |   -   |            email 형식 id             |
-   |     pwd      | varchar(100) |  no  |  -   |  null   |   -   | bcrypt 알고리즘을 사용한 해싱값 저장 |
-   | display_name | varchar(10)  |  no  |  -   |  null   |   -   |            10자까지 가능             |
-   |  create_at   |   datetime   |  no  |  -   |   now   |   -   |            사용자 등록일             |
+   |    field     |     type     | null | key  | default |     extra      |                 desc                 |
+   | :----------: | :----------: | :--: | :--: | :-----: | :------------: | :----------------------------------: |
+   |      id      |     int      |  no  |  pk  |  null   | auto increment |                  -                   |
+   |    email     | varchar(30)  |  no  |  pk  |  null   |       -        |            email 형식 id             |
+   |     pwd      | varchar(100) |  no  |  -   |  null   |       -        | bcrypt 알고리즘을 사용한 해싱값 저장 |
+   | display_name | varchar(10)  |  no  |  -   |  null   |       -        |            10자까지 가능             |
+   |  create_at   |   datetime   |  no  |  -   |   now   |       -        |            사용자 등록일             |
 
 2. posts
 
@@ -246,3 +247,8 @@ Swagger
 6. comments 기능
     1. 포스트별 댓글 조회
     2. 댓글 등록
+
+### devlog
+- 21.12.23 project setup
+- 21.12.24 ApiUtil 구현
+- 21.12.25~26 User Entity & Repository.save() 구현
