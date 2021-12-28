@@ -252,3 +252,4 @@ Swagger
 - 21.12.23 project setup
 - 21.12.24 ApiUtil 구현
 - 21.12.25~26 User Entity & Repository.save() 구현
+- 21.12.27 EncryptUtil 구현
