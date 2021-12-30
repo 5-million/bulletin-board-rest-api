@@ -26,6 +26,8 @@ public class UserRegisterRequest {
     @NotBlank
     private String displayName;
 
+    public UserRegisterRequest() {}
+
     public UserRegisterRequest(String email, String password, String confirmPassword, String displayName) {
         this.email = email;
         this.password = password;

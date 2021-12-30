@@ -2,17 +2,13 @@ package xyz.fivemillion.bulletinboardapi.error;
 
 import org.springframework.http.HttpStatus;
 
-public class DisplayNameDuplicateException extends RuntimeException implements CustomException {
+public class DisplayNameDuplicateException extends CustomException {
 
-    private final HttpStatus status;
-
-    public DisplayNameDuplicateException(String message) {
-        super(message);
-        this.status = HttpStatus.BAD_REQUEST;
+    public DisplayNameDuplicateException(HttpStatus status, String message) {
+        super(status, message);
     }
 
-    @Override
-    public HttpStatus getStatus() {
-        return this.status;
+    public DisplayNameDuplicateException(String message) {
+        this(HttpStatus.CONFLICT, message);
     }
 }

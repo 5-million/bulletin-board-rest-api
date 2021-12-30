@@ -257,3 +257,8 @@ Swagger
   - user service: register, findByEmail, findByDisplayName 추가 
   - user repository: findByEmail, findByDisplayName 추가
   - exception: PasswordNotMatch, EmailDuplicate, DisplayNameDuplicate 예외 추가
+- 21.12.30
+  - ControllerAdvice 추가
+  - UserController 추가
+  - ? extends CustomException 코드 수정
+  - DTO: UserInfo 추가 및 UserRegisterRequest 수정
