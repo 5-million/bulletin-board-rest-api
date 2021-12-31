@@ -76,64 +76,62 @@ Swagger
 🔑 : 인증된 사용자만
 
 1. users
-
     1. 사용자 등록
-
         - POST /api/v1/users
-
         - 등록 성공시 `Created`
-
         - 중복된 id일 경우 `DuplicateException`으로 `BadRequest`
-
         - RequestBody
+            ```json
+            {
+                "id" : "email 형식",
+                "password" : "password",
+                "confirmPassword" : "confirm password",
+                "displayName" : "닉네임"
+            }
+            ```
 
-          ```json
-          {
-              "id" : "email 형식",
-              "pwd" : "password",
-              "confirm_pwd" : "confirm password",
-              "display_name" : "닉네임"
-          }
-          ```
+    2. email 중복 체크
+        - POST /api/v1/users/check/email
+        - RequestBody
+            ```json
+            {"email" : "email@example.com"}
+            ```
+        - `성공시 status = ok, response = duplicate ? false : true`
 
-    2. 🔑 사용자 삭제
+    3. displayName 중복 체크
+        - POST /api/v1/users/check/displayname
+        - RequestBody
+            ```json
+            {"displayName" : "display name"}
+            ```
+        - `성공시 status = ok, response = duplicate ? false : true`
 
+    4. 🔑 사용자 삭제
         - DELETE /api/v1/users
-
         - Request Body
-
-          ```json
-          {"pwd" : "user pwd"}
-          ```
-
+            ```json
+            {"password" : "user pwd"}
+            ```
         - 비밀번호 틀릴시 `BadRequest`
-
         - 삭제 성공시 `NoContent`
 
-    3. 로그인
-
+    5. 로그인
         - POST /api/v1/users/login
-
         - Request Body
-
-          ```json
-          {
-              "id" : "email 형식",
-              "pwd" : "password"
-          }
-          ```
-
+            ```json
+            {
+                "id" : "email 형식",
+                "password" : "password"
+            }
+            ```
         - 실패시 `NotFound`
-
         - 성공시 `200` + response body
-
-          ```json
-          {
-              "id" : "id",
-              "display_name" : "닉네임",
-              "create_at" : "yyyy-MM-dd hh:mm:ss"
-          }
-          ```
+            ```json
+            {
+                "id" : "id",
+                "displayName" : "닉네임",
+                "createAt" : "yyyy-MM-dd hh:mm:ss"
+            }
 
 2. posts
 
@@ -253,12 +251,15 @@ Swagger
 - 21.12.24 ApiUtil 구현
 - 21.12.25~26 User Entity & Repository.save() 구현
 - 21.12.27
-  - EncryptUtil 구현 
-  - user service: register, findByEmail, findByDisplayName 추가 
-  - user repository: findByEmail, findByDisplayName 추가
-  - exception: PasswordNotMatch, EmailDuplicate, DisplayNameDuplicate 예외 추가
+    - EncryptUtil 구현
+    - user service: register, findByEmail, findByDisplayName 추가
+    - user repository: findByEmail, findByDisplayName 추가
+    - exception: PasswordNotMatch, EmailDuplicate, DisplayNameDuplicate 예외 추가
 - 21.12.30
-  - ControllerAdvice 추가
-  - UserController 추가
-  - ? extends CustomException 코드 수정
-  - DTO: UserInfo 추가 및 UserRegisterRequest 수정
+    - ControllerAdvice 추가
+    - UserController 추가
+    - ? extends CustomException 코드 수정
+    - DTO: UserInfo 추가 및 UserRegisterRequest 수정
+- 21.12.31
+    - UserController: doubleCheckEmail, doubleCheckDisplayName 추가
+    - DTO: EmailCheckRequest, DisplayNameCheckRequest 추가

@@ -1,19 +1,13 @@
 package xyz.fivemillion.bulletinboardapi.user;
 
 import com.google.gson.Gson;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -23,23 +17,19 @@ import xyz.fivemillion.bulletinboardapi.error.ControllerExceptionHandler;
 import xyz.fivemillion.bulletinboardapi.error.DisplayNameDuplicateException;
 import xyz.fivemillion.bulletinboardapi.error.EmailDuplicateException;
 import xyz.fivemillion.bulletinboardapi.error.PasswordNotMatchException;
-import xyz.fivemillion.bulletinboardapi.user.dto.UserInfo;
+import xyz.fivemillion.bulletinboardapi.user.dto.DisplayNameCheckRequest;
+import xyz.fivemillion.bulletinboardapi.user.dto.EmailCheckRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
-import xyz.fivemillion.bulletinboardapi.utils.ApiUtil;
 
 import javax.persistence.PersistenceException;
-import javax.servlet.http.HttpServletRequest;
 
-import java.lang.reflect.Type;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -281,5 +271,191 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.response.email").value(email))
                 .andExpect(jsonPath("$.response.displayName").value(displayName))
                 .andExpect(jsonPath("$.response.createAt").exists());
+    }
+
+    @Test
+    @DisplayName("doubleCheckEmail fail: email 누락")
+    void doubleCheckEmail_fail_email누락() throws Exception {
+        //given
+        String url = "/api/v1/user/check/email";
+        EmailCheckRequest request = new EmailCheckRequest(null);
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders
+                        .post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("doubleCheckEmail fail: email 형식이 아님")
+    void doubleCheckEmail_fail_email형식이아님() throws Exception {
+        //given
+        String url = "/api/v1/user/check/email";
+        EmailCheckRequest request = new EmailCheckRequest("abc");
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders
+                        .post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("doubleCheckEmail success: 중복되지 않음")
+    void doubleCheckEmail_success_true() throws Exception {
+        //given
+        String url = "/api/v1/user/check/email";
+        EmailCheckRequest request = new EmailCheckRequest("abc@test.com");
+        given(userService.findByEmail(anyString())).willReturn(null);
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders
+                        .post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").value("true"));
+    }
+
+    @Test
+    @DisplayName("doubleCheckEmail success: 중복됨")
+    void doubleCheckEmail_success_false() throws Exception {
+        //given
+        String url = "/api/v1/user/check/email";
+        EmailCheckRequest request = new EmailCheckRequest("abc@test.com");
+        given(userService.findByEmail(anyString())).willReturn(
+                User.builder()
+                        .email("abc@test.com")
+                        .build()
+        );
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders
+                        .post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").value("false"));
+    }
+
+    @Test
+    @DisplayName("doubleCheckDisplayName fail: displayName 6자 미만")
+    void doubleCheckDisplayName_fail_displayName6자미만() throws Exception {
+        //given
+        String url = "/api/v1/user/check/displayname";
+        DisplayNameCheckRequest request = new DisplayNameCheckRequest("name");
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("doubleCheckDisplayName fail: displayName 20자 초과")
+    void doubleCheckDisplayName_fail_displayName20자초과() throws Exception {
+        //given
+        String url = "/api/v1/user/check/displayname";
+        DisplayNameCheckRequest request = new DisplayNameCheckRequest("namenamenamenamenamename");
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("doubleCheckDisplayName fail: displayName 누락")
+    void doubleCheckDisplayName_fail_displayName누락() throws Exception {
+        //given
+        String url = "/api/v1/user/check/displayname";
+        DisplayNameCheckRequest request = new DisplayNameCheckRequest(null);
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("doubleCheckDisplayName success: 중복되지 않음")
+    void doubleCheckDisplayName_success_중복되지않음() throws Exception {
+        //given
+        String url = "/api/v1/user/check/displayname";
+        DisplayNameCheckRequest request = new DisplayNameCheckRequest("display name");
+        given(userService.findByDisplayName(anyString())).willReturn(null);
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").value("true"));
+    }
+
+    @Test
+    @DisplayName("doubleCheckDisplayName success: 중복됨")
+    void doubleCheckDisplayName_success_중복() throws Exception {
+        //given
+        String url = "/api/v1/user/check/displayname";
+        DisplayNameCheckRequest request = new DisplayNameCheckRequest("display name");
+        given(userService.findByDisplayName(anyString())).willReturn(
+                User.builder()
+                        .displayName(request.getDisplayName())
+                        .build()
+        );
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").value("false"));
     }
 }
