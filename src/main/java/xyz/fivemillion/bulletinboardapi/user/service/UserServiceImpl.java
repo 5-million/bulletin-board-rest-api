@@ -1,13 +1,16 @@
 package xyz.fivemillion.bulletinboardapi.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.fivemillion.bulletinboardapi.error.DisplayNameDuplicateException;
 import xyz.fivemillion.bulletinboardapi.error.EmailDuplicateException;
+import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.error.PasswordNotMatchException;
 import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.UserRepository;
+import xyz.fivemillion.bulletinboardapi.user.dto.LoginRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.utils.encrypt.EncryptUtil;
 
@@ -50,5 +53,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByDisplayName(String displayName) {
         return userRepository.findByDisplayName(displayName).orElse(null);
+    }
+
+    @Override
+    public User login(LoginRequest request) {
+        String LOGIN_FAIL_MESSAGE = "email or password is incorrect.";
+        User user = findByEmail(request.getEmail());
+
+        if (user == null)
+            throw new NotFoundException(HttpStatus.BAD_REQUEST, LOGIN_FAIL_MESSAGE);
+
+        if (!encryptUtil.isMatch(request.getPassword(), user.getPassword()))
+            throw new PasswordNotMatchException(HttpStatus.BAD_REQUEST, LOGIN_FAIL_MESSAGE);
+
+        return user;
     }
 }

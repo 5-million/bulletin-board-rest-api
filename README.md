@@ -233,7 +233,7 @@ Swagger
 3. users 기능
     1. user entity ✔︎
     2. 사용자 등록 ✔︎
-    3. 로그인
+    3. 로그인 ✔︎
 4. JWT 설정
 5. posts 기능
     1. posts entity
@@ -261,5 +261,7 @@ Swagger
     - ? extends CustomException 코드 수정
     - DTO: UserInfo 추가 및 UserRegisterRequest 수정
 - 21.12.31
-    - UserController: doubleCheckEmail, doubleCheckDisplayName 추가
-    - DTO: EmailCheckRequest, DisplayNameCheckRequest 추가
+    - UserController: doubleCheckEmail, doubleCheckDisplayName 추가 + login 추가
+    - DTO: EmailCheckRequest, DisplayNameCheckRequest 추가 + LoginRequest 추가
+    - UserService: login 추가
+    - Exception: NotFoundException(extends CustomException) 추가

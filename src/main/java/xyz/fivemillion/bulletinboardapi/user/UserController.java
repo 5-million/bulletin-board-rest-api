@@ -3,10 +3,7 @@ package xyz.fivemillion.bulletinboardapi.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import xyz.fivemillion.bulletinboardapi.user.dto.DisplayNameCheckRequest;
-import xyz.fivemillion.bulletinboardapi.user.dto.EmailCheckRequest;
-import xyz.fivemillion.bulletinboardapi.user.dto.UserInfo;
-import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
+import xyz.fivemillion.bulletinboardapi.user.dto.*;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
 
 import javax.validation.Valid;
@@ -39,5 +36,12 @@ public class UserController {
     public ApiResult<Boolean> doubleCheckDisplayName(@Valid @RequestBody DisplayNameCheckRequest request) {
         User user = userService.findByDisplayName(request.getDisplayName());
         return user == null ? success(HttpStatus.OK, true) : success(HttpStatus.OK, false);
+    }
+
+    @PostMapping(path = "login")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResult<UserInfo> login(@Valid @RequestBody LoginRequest request) {
+        User user = userService.login(request);
+        return success(HttpStatus.OK, new UserInfo(user));
     }
 }

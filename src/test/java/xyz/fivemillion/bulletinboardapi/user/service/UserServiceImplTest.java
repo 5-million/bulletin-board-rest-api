@@ -9,9 +9,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import xyz.fivemillion.bulletinboardapi.error.DisplayNameDuplicateException;
 import xyz.fivemillion.bulletinboardapi.error.EmailDuplicateException;
+import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.error.PasswordNotMatchException;
 import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.UserRepository;
+import xyz.fivemillion.bulletinboardapi.user.dto.LoginRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.utils.encrypt.BCryptEncryption;
 import xyz.fivemillion.bulletinboardapi.utils.encrypt.EncryptUtil;
@@ -78,7 +80,7 @@ class UserServiceImplTest {
         );
 
         //then
-        assertEquals(HttpStatus.BAD_REQUEST, thrown.getStatus());
+        assertEquals(HttpStatus.CONFLICT, thrown.getStatus());
     }
 
     @Test
@@ -107,7 +109,7 @@ class UserServiceImplTest {
         );
 
         //then
-        assertEquals(HttpStatus.BAD_REQUEST, thrown.getStatus());
+        assertEquals(HttpStatus.CONFLICT, thrown.getStatus());
     }
 
     @Test
@@ -220,5 +222,82 @@ class UserServiceImplTest {
 
         //then
         assertNull(result);
+    }
+
+    @Test
+    @DisplayName("login fail: 사용자를 찾을 수 없음")
+    void login_fail_사용자를찾을수없음() {
+        //given
+        LoginRequest request = new LoginRequest(
+                "abc@test.com",
+                "password"
+        );
+
+        given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
+
+        //when
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> userService.login(request));
+
+        //then
+        assertEquals(HttpStatus.BAD_REQUEST, thrown.getStatus());
+        assertEquals("email or password is incorrect.", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("login fail: 암호가 맞지 않음")
+    void login_fail_암호가틀림() {
+        //given
+        LoginRequest request = new LoginRequest(
+                "abc@test.com",
+                "password"
+        );
+
+        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(
+                User.builder()
+                        .email("abc@test.com")
+                        .password(bCryptEncryption.encrypt("password"))
+                        .build()
+        ));
+
+        given(encryptUtil.isMatch(anyString(), anyString())).willReturn(false);
+
+
+        //when
+        PasswordNotMatchException thrown = assertThrows(
+                PasswordNotMatchException.class,
+                () -> userService.login(request)
+        );
+
+        //then
+        assertEquals(HttpStatus.BAD_REQUEST, thrown.getStatus());
+        assertEquals("email or password is incorrect.", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("login success")
+    void login_success() {
+        //given
+        LoginRequest request = new LoginRequest(
+                "abc@test.com",
+                "password"
+        );
+
+        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(
+                User.builder()
+                        .email("abc@test.com")
+                        .displayName("display name")
+                        .password(bCryptEncryption.encrypt("password"))
+                        .build()
+        ));
+
+        given(encryptUtil.isMatch(anyString(), anyString())).willReturn(true);
+
+        //when
+        User result = userService.login(request);
+
+        //then
+        assertEquals("abc@test.com", result.getEmail());
+        assertTrue(bCryptEncryption.isMatch("password", result.getPassword()));
+        assertNotNull(result.getDisplayName());
     }
 }

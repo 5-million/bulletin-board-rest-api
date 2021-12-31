@@ -8,17 +8,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import xyz.fivemillion.bulletinboardapi.error.ControllerExceptionHandler;
-import xyz.fivemillion.bulletinboardapi.error.DisplayNameDuplicateException;
-import xyz.fivemillion.bulletinboardapi.error.EmailDuplicateException;
-import xyz.fivemillion.bulletinboardapi.error.PasswordNotMatchException;
+import xyz.fivemillion.bulletinboardapi.error.*;
 import xyz.fivemillion.bulletinboardapi.user.dto.DisplayNameCheckRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.EmailCheckRequest;
+import xyz.fivemillion.bulletinboardapi.user.dto.LoginRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
 
@@ -33,8 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
-
-
 
     @Mock UserService userService;
     @InjectMocks private UserController userController;
@@ -457,5 +454,133 @@ class UserControllerTest {
         result
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.response").value("false"));
+    }
+
+    private ResultActions performLogin(LoginRequest request) throws Exception {
+        String url = "/api/v1/user/login";
+        return mvc.perform(
+                MockMvcRequestBuilders.post(url)
+                        .content(gson.toJson(request))
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+    }
+
+    @Test
+    @DisplayName("login fail: email 형식이 아님")
+    void login_fail_email형식이아님() throws Exception {
+        //given
+        LoginRequest request = new LoginRequest("abc", "password");
+
+        //when
+        ResultActions result = performLogin(request);
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("login fail: email 누락")
+    void login_fail_email누락() throws Exception {
+        //given
+        LoginRequest request = new LoginRequest(null, "password");
+
+        //when
+        ResultActions result = performLogin(request);
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("login fail: password 8자 미만")
+    void login_fail_pwd8자미만() throws Exception {
+        //given
+        LoginRequest request = new LoginRequest("abc@test.com", "pwd");
+
+        //when
+        ResultActions result = performLogin(request);
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("login fail: password 누락")
+    void login_fail_pwd누락() throws Exception {
+        //given
+        LoginRequest request = new LoginRequest("abc@test.com", null);
+
+        //when
+        ResultActions result = performLogin(request);
+
+        //then
+        result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("login fail: email에 해당하는 사용자 없음")
+    void login_fail_userNotFound() throws Exception {
+        //given
+        LoginRequest request = new LoginRequest("abc@test.com", "password");
+        given(userService.login(any(LoginRequest.class))).willThrow(
+                new NotFoundException(HttpStatus.BAD_REQUEST, "email or password is incorrect.")
+        );
+
+        //when
+        ResultActions result = performLogin(request);
+
+        //then
+        result
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        jsonPath("$.error.message").value("email or password is incorrect.")
+                );
+    }
+
+    @Test
+    @DisplayName("login fail: password가 일치하지 않음")
+    void login_fail_incorrectPwd() throws Exception {
+        //given
+        LoginRequest request = new LoginRequest("abc@test.com", "password");
+        given(userService.login(any(LoginRequest.class))).willThrow(
+                new PasswordNotMatchException(HttpStatus.BAD_REQUEST, "email or password is incorrect.")
+        );
+
+        //when
+        ResultActions result = performLogin(request);
+
+        //then
+        result
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        jsonPath("$.error.message").value("email or password is incorrect.")
+                );
+    }
+
+    @Test
+    @DisplayName("login success")
+    void login_success() throws Exception {
+        //given
+        String email = "abc@test.com";
+        String displayName = "display name";
+
+        LoginRequest request = new LoginRequest(email, "password");
+
+        given(userService.login(any(LoginRequest.class))).willReturn(
+                User.builder()
+                        .email(email)
+                        .displayName(displayName)
+                        .build()
+        );
+
+        //when
+        ResultActions result = performLogin(request);
+
+        //then
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.email").value(email))
+                .andExpect(jsonPath("$.response.displayName").value(displayName))
+                .andExpect(jsonPath("$.response.createAt").exists());
     }
 }
