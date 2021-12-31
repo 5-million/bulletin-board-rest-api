@@ -13,7 +13,7 @@ stack
 요구사항
 
 모든 응답은 `ApiResult<T>`객체를 통해 이루어진다.  
-이를 위해 `ApiUtil` 클래스를 구현하며 `success` 함수와 `fail` 함수를 구현한다. 두 함수의 리턴은 `ApiResult<T>`이고 `fail`함수는 ControllerAdvice에서만 사용된다. 
+이를 위해 `ApiUtil` 클래스를 구현하며 `success` 함수와 `fail` 함수를 구현한다. 두 함수의 리턴은 `ApiResult<T>`이고 `fail`함수는 ControllerAdvice에서만 사용된다.
 
 ```java
 class ApiResult<T> {
@@ -45,7 +45,7 @@ Swagger
    | :----------: | :----------: | :--: | :--: | :-----: | :------------: | :----------------------------------: |
    |      id      |     int      |  no  |  pk  |  null   | auto increment |                  -                   |
    |    email     | varchar(30)  |  no  |  pk  |  null   |       -        |            email 형식 id             |
-   |     pwd      | varchar(100) |  no  |  -   |  null   |       -        | bcrypt 알고리즘을 사용한 해싱값 저장 |
+   |   password   | varchar(100) |  no  |  -   |  null   |       -        | bcrypt 알고리즘을 사용한 해싱값 저장 |
    | display_name | varchar(10)  |  no  |  -   |  null   |       -        |            10자까지 가능             |
    |  create_at   |   datetime   |  no  |  -   |   now   |       -        |            사용자 등록일             |
 
@@ -172,9 +172,9 @@ Swagger
               "title" : "제목",
               "writer" : "작성자",
               "views" : "조회수",
-              "comments_count" : "댓글수",
-              "create_at" : "등록일",
-              "update_at" : "수정일"
+              "commentsCount" : "댓글수",
+              "createAt" : "등록일",
+              "updateAt" : "수정일"
           }
           ```
 
@@ -190,14 +190,14 @@ Swagger
               "writer" : "작성자",
               "content" : "내용",
               "views" : "조회수",
-              "create_at" : "등록일",
-              "update_at" : "수정일",
+              "createAt" : "등록일",
+              "updateAt" : "수정일",
               "comments" : [
                   {
                       "id" : "comment id",
                       "writer" : "댓글 작성자",
                       "content" : "댓글 내용",
-                      "create_at" : "댓글 등록일"
+                      "createAt" : "댓글 등록일"
                   }
               ]
           }
@@ -228,11 +228,11 @@ Swagger
 
 ### dev sequence
 
-1. project setup (db 연결 테스트까지)
-2. ApiResult 구현
+1. project setup ✔︎
+2. ApiResult 구현 ✔︎
 3. users 기능
-    1. user entity
-    2. 사용자 등록
+    1. user entity ✔︎
+    2. 사용자 등록 ✔︎
     3. 로그인
 4. JWT 설정
 5. posts 기능
