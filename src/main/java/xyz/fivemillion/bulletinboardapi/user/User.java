@@ -2,10 +2,13 @@ package xyz.fivemillion.bulletinboardapi.user;
 
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
+import xyz.fivemillion.bulletinboardapi.post.Post;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -32,6 +35,9 @@ public class User {
 
     @Column
     private final LocalDateTime createAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "user")
+    private List<Post> posts = new ArrayList<>();
 
     @Builder
     private User(String email, String password, String displayName) {

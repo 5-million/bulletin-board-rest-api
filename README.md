@@ -265,3 +265,5 @@ Swagger
     - DTO: EmailCheckRequest, DisplayNameCheckRequest 추가 + LoginRequest 추가
     - UserService: login 추가
     - Exception: NotFoundException(extends CustomException) 추가
+- 22.01.01
+  - Post Entity 추가
