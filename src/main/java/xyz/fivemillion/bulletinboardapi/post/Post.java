@@ -33,13 +33,13 @@ public class Post {
     private String content;
 
     @Column
-    private final long views = 0;
+    private long views = 0;
 
     @Column
     private final LocalDateTime createAt = LocalDateTime.now();
 
     @Column
-    private final LocalDateTime updateAt = LocalDateTime.now();
+    private LocalDateTime updateAt = LocalDateTime.now();
 
     @Builder
     private Post(Long id, User writer, String title, String content) {

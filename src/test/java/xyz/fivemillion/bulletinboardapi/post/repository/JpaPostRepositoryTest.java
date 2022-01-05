@@ -12,6 +12,9 @@ import xyz.fivemillion.bulletinboardapi.user.User;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
+import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -76,5 +79,32 @@ class JpaPostRepositoryTest {
         assertEquals("title", post.getTitle());
         assertEquals("content", post.getContent());
         assertEquals(0, post.getViews());
+    }
+
+    @Test
+    @DisplayName("findByWriter: empty")
+    void findByWriter_empty() {
+        //given
+        Long writerId = 5L;
+
+        //when
+        List<Post> result = postRepository.findByWriter(writerId);
+
+        //then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("findByWriter: present")
+    void findByWriter_present() {
+        //given
+        Long writerId = 3L;
+
+        //when
+        List<Post> result = postRepository.findByWriter(writerId);
+
+        //then
+        assertFalse(result.isEmpty());
+        assertEquals(4, result.size());
     }
 }

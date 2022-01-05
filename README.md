@@ -236,7 +236,7 @@ Swagger
     3. 로그인 ✔︎
 4. JWT 설정
 5. posts 기능
-    1. posts entity
+    1. posts entity ✔︎
     2. 여러 포스트 조회
     3. 포스트 상세 조회
     4. 포스트 등록
@@ -269,3 +269,5 @@ Swagger
   - Post Entity 추가
 - 22.01.04
   - PostService/Repository register 추가
+  - 테스트용 샘플 데이터(data.sql) 추가
+  - PostRepository findByWriter 추가
