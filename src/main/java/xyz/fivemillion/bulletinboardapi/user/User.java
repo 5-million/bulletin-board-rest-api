@@ -36,11 +36,12 @@ public class User {
     @Column
     private final LocalDateTime createAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "writer")
     private List<Post> posts = new ArrayList<>();
 
     @Builder
-    private User(String email, String password, String displayName) {
+    private User(Long id, String email, String password, String displayName) {
+        this.id = id;
         this.email = email;
         this.password = password;
         this.displayName = displayName;

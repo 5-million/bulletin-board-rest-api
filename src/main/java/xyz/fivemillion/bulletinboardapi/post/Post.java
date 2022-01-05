@@ -17,11 +17,11 @@ import java.time.LocalDateTime;
 public class Post {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer", nullable = false)
-    private User user;
+    private User writer;
 
     @Column(nullable = false, length = 100)
     @NotBlank
@@ -42,8 +42,9 @@ public class Post {
     private final LocalDateTime updateAt = LocalDateTime.now();
 
     @Builder
-    private Post(User user, String title, String content) {
-        this.user = user;
+    private Post(Long id, User writer, String title, String content) {
+        this.id = id;
+        this.writer = writer;
         this.title = title;
         this.content = content;
     }
