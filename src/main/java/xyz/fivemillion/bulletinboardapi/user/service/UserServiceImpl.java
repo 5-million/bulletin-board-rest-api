@@ -56,16 +56,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(LoginRequest request) {
+    public User login(String email, String password) {
         String LOGIN_FAIL_MESSAGE = "email or password is incorrect.";
-        User user = findByEmail(request.getEmail());
+        User user = findByEmail(email);
 
         if (user == null)
             throw new NotFoundException(HttpStatus.BAD_REQUEST, LOGIN_FAIL_MESSAGE);
 
-        if (!encryptUtil.isMatch(request.getPassword(), user.getPassword()))
+        if (!encryptUtil.isMatch(password, user.getPassword()))
             throw new PasswordNotMatchException(HttpStatus.BAD_REQUEST, LOGIN_FAIL_MESSAGE);
 
         return user;
+    }
+
+    @Override
+    public User login(LoginRequest request) {
+        return login(request.getEmail(), request.getPassword());
     }
 }

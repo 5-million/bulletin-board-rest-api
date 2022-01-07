@@ -9,5 +9,6 @@ public interface UserService {
     User register(UserRegisterRequest request);
     User findByEmail(String email);
     User findByDisplayName(String displayName);
+    User login(String email, String password);
     User login(LoginRequest request);
 }
