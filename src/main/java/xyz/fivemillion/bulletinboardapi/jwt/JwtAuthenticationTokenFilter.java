@@ -1,5 +1,9 @@
 package xyz.fivemillion.bulletinboardapi.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -22,19 +26,25 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            String authorizationToken = obtainAuthorizationToken(request);
+            try {
+                String authorizationToken = obtainAuthorizationToken(request);
 
-            if (authorizationToken != null && jwtTokenUtil.verify(authorizationToken)) {
-                String email = jwtTokenUtil.getEmailFromToken(authorizationToken);
-                String displayName = jwtTokenUtil.getDisplayNameFromToken(authorizationToken);
-                JwtAuthenticationToken authentication = new JwtAuthenticationToken(
-                        new JwtAuthentication(email, displayName),
-                        null,
-                        new ArrayList<>()
-                );
+                if (authorizationToken != null && jwtTokenUtil.verify(authorizationToken)) {
+                    String email = jwtTokenUtil.getEmailFromToken(authorizationToken);
+                    String displayName = jwtTokenUtil.getDisplayNameFromToken(authorizationToken);
+                    JwtAuthenticationToken authentication = new JwtAuthenticationToken(
+                            new JwtAuthentication(email, displayName),
+                            null,
+                            new ArrayList<>()
+                    );
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } catch (SignatureException | MalformedJwtException | UnsupportedJwtException exception) {
+                request.setAttribute("exception", "invalid token");
+            } catch (ExpiredJwtException exception) {
+                request.setAttribute("exception", "expired token");
             }
         }
 
