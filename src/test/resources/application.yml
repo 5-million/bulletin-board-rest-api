@@ -14,6 +14,13 @@ spring:
     show-sql: true
     defer-datasource-initialization: true
 
+  main:
+    allow-circular-references: true
+
 logging:
   level:
     org.hibernate.SQL: debug
+
+jwt:
+  issuer: issuer
+  secret: secret

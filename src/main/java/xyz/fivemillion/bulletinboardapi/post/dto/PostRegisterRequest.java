@@ -14,10 +14,6 @@ import javax.validation.constraints.NotBlank;
 public class PostRegisterRequest {
 
     @NotBlank
-    @Email
-    private String email;
-
-    @NotBlank
     @Length(min = 1, max = 100)
     private String title;
 
