@@ -27,12 +27,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final String BASE_URL = "/api/v1";
 
-    private final JwtTokenUtil jwtTokenUtil;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @Bean
+    public JwtTokenUtil jwtTokenUtil() {
+        return new JwtTokenUtil();
+    }
+
+    @Bean
+    public JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+        return new JwtAuthenticationEntryPoint();
+    }
 
     @Bean
     public JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter() {
-        return new JwtAuthenticationTokenFilter(jwtTokenUtil);
+        return new JwtAuthenticationTokenFilter(jwtTokenUtil());
     }
 
     @Autowired
@@ -60,7 +67,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .exceptionHandling()
-                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint())
                 .and()
                 .authorizeHttpRequests()
                 .antMatchers(HttpMethod.POST, BASE_URL + "/posts").authenticated()
