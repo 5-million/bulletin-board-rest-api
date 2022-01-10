@@ -2,13 +2,18 @@ package xyz.fivemillion.bulletinboardapi.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthenticationToken;
+import xyz.fivemillion.bulletinboardapi.jwt.JwtTokenUtil;
 import xyz.fivemillion.bulletinboardapi.user.dto.*;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
 
 import javax.validation.Valid;
 
-import static xyz.fivemillion.bulletinboardapi.utils.ApiUtil.*;
+import static xyz.fivemillion.bulletinboardapi.utils.ApiUtil.ApiResult;
+import static xyz.fivemillion.bulletinboardapi.utils.ApiUtil.success;
 
 @RestController
 @RequestMapping("api/v1/user")
@@ -16,6 +21,8 @@ import static xyz.fivemillion.bulletinboardapi.utils.ApiUtil.*;
 public class UserController {
 
     private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenUtil jwtTokenUtil;
 
     @PostMapping(path = "register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -40,8 +47,12 @@ public class UserController {
 
     @PostMapping(path = "login")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<UserInfo> login(@Valid @RequestBody LoginRequest request) {
-        User user = userService.login(request);
-        return success(HttpStatus.OK, new UserInfo(user));
+    public ApiResult<String> login(@Valid @RequestBody LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new JwtAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
+        final User user = (User) authentication.getDetails();
+        return success(HttpStatus.OK, jwtTokenUtil.generateJwtToken(user));
     }
 }
