@@ -7,7 +7,6 @@ import xyz.fivemillion.bulletinboardapi.post.Post;
 
 import javax.persistence.EntityManager;
 import java.util.List;
-import java.util.Optional;
 
 import static xyz.fivemillion.bulletinboardapi.post.QPost.post;
 import static xyz.fivemillion.bulletinboardapi.user.QUser.user;
@@ -22,6 +21,16 @@ public class JpaPostRepository implements PostRepository {
     @Override
     public void save(Post post) {
         em.persist(post);
+    }
+
+    @Override
+    public List<Post> findAll(long offset, long size) {
+        return query.selectFrom(post)
+                .join(post.writer, user)
+                .orderBy(post.createAt.desc())
+                .offset(offset)
+                .limit(size)
+                .fetch();
     }
 
     @Override

@@ -1,7 +1,7 @@
 package xyz.fivemillion.bulletinboardapi.post.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +10,7 @@ import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,12 +19,12 @@ class JpaPostRepositoryTest {
 
     @Autowired
     private EntityManager em;
-    private PostRepository postRepository;
+    private static PostRepository postRepository;
 
-    @BeforeEach
-    void beforeEach() {
-        JPAQueryFactory queryFactory = new JPAQueryFactory(em);
-        postRepository = new JpaPostRepository(em, queryFactory);
+    @BeforeAll
+    static void beforeAll(@Autowired EntityManager entityManager) {
+        JPAQueryFactory query = new JPAQueryFactory(entityManager);
+        postRepository = new JpaPostRepository(entityManager, query);
     }
 
     @Test
@@ -54,16 +51,8 @@ class JpaPostRepositoryTest {
     @DisplayName("write success")
     void write_success() {
         //given
-        User writer = User.builder()
-                .email("abc@test.com")
-                .password("password")
-                .displayName("display name")
-                .build();
-
-        em.persist(writer);
-
         Post post = Post.builder()
-                .writer(writer)
+                .writer(em.find(User.class, 1L))
                 .title("title")
                 .content("content")
                 .build();
@@ -75,10 +64,57 @@ class JpaPostRepositoryTest {
         assertNotNull(post.getId());
         assertNotNull(post.getCreateAt());
         assertNotNull(post.getUpdateAt());
-        assertEquals(writer.getId(), post.getWriter().getId());
+        assertEquals(1L, post.getWriter().getId());
         assertEquals("title", post.getTitle());
         assertEquals("content", post.getContent());
         assertEquals(0, post.getViews());
+    }
+
+    @Test
+    @DisplayName("findAll (offset=0, size=100)")
+    void findAll_1() {
+        //given
+        long offset = 0;
+        long size = 100;
+
+        //when
+        List<Post> result = postRepository.findAll(offset, size);
+
+        //then
+        assertEquals(100, result.size());
+        assertEquals(101, result.get(0).getId());
+        assertEquals(2, result.get(99).getId());
+    }
+
+    @Test
+    @DisplayName("findAll (offset=2, size=1)")
+    void findAll_2() {
+        //given
+        long offset = 2;
+        long size = 1;
+
+        //when
+        List<Post> result = postRepository.findAll(offset, size);
+
+        //then
+        assertEquals(1, result.size());
+        assertEquals(99, result.get(0).getId());
+    }
+
+    @Test
+    @DisplayName("findAll (offset=5, size=5)")
+    void findAll_3() {
+        //given
+        long offset = 5;
+        long size = 5;
+
+        //when
+        List<Post> result = postRepository.findAll(offset, size);
+
+        //then
+        assertEquals(5, result.size());
+        assertEquals(96, result.get(0).getId());
+        assertEquals(92, result.get(result.size() - 1).getId());
     }
 
     @Test
@@ -105,6 +141,8 @@ class JpaPostRepositoryTest {
 
         //then
         assertFalse(result.isEmpty());
-        assertEquals(4, result.size());
+        for (Post res : result) {
+            assertEquals(res.getWriter().getId(), writerId);
+        }
     }
 }
