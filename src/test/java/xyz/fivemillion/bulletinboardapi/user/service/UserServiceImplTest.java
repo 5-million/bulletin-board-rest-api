@@ -7,10 +7,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import xyz.fivemillion.bulletinboardapi.error.DisplayNameDuplicateException;
-import xyz.fivemillion.bulletinboardapi.error.EmailDuplicateException;
-import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
-import xyz.fivemillion.bulletinboardapi.error.PasswordNotMatchException;
+import xyz.fivemillion.bulletinboardapi.error.DuplicateException;
+import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.IllegalPasswordException;
+import xyz.fivemillion.bulletinboardapi.error.LoginException;
 import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.UserRepository;
 import xyz.fivemillion.bulletinboardapi.user.dto.LoginRequest;
@@ -46,12 +46,13 @@ class UserServiceImplTest {
         );
 
         //when
-        PasswordNotMatchException exception =
-                assertThrows(PasswordNotMatchException.class, () -> userService.register(request));
+        IllegalPasswordException exception =
+                assertThrows(IllegalPasswordException.class, () -> userService.register(request));
 
         //then
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
-        assertEquals("password and confirm password do not match.", exception.getMessage());
+        assertEquals(Error.CONFIRM_PASSWORD_NOT_MATCH, exception.getError());
+        assertEquals(Error.CONFIRM_PASSWORD_NOT_MATCH.getStatus(), exception.getHttpStatus());
+        assertEquals(Error.CONFIRM_PASSWORD_NOT_MATCH.getCode(), exception.getErrorCode());
     }
 
     @Test
@@ -74,13 +75,14 @@ class UserServiceImplTest {
         given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
 
         //when
-        EmailDuplicateException thrown = assertThrows(
-                EmailDuplicateException.class,
+        DuplicateException thrown = assertThrows(
+                DuplicateException.class,
                 () -> userService.register(request)
         );
 
         //then
-        assertEquals(HttpStatus.CONFLICT, thrown.getStatus());
+        assertEquals(Error.EMAIL_DUPLICATE.getStatus(), thrown.getHttpStatus());
+        assertEquals(Error.EMAIL_DUPLICATE.getCode(), thrown.getErrorCode());
     }
 
     @Test
@@ -103,13 +105,14 @@ class UserServiceImplTest {
         given(userRepository.findByDisplayName(displayName)).willReturn(Optional.of(user));
 
         //when
-        DisplayNameDuplicateException thrown = assertThrows(
-                DisplayNameDuplicateException.class,
+        DuplicateException thrown = assertThrows(
+                DuplicateException.class,
                 () -> userService.register(request)
         );
 
         //then
-        assertEquals(HttpStatus.CONFLICT, thrown.getStatus());
+        assertEquals(Error.DISPLAY_NAME_DUPLICATE.getStatus(), thrown.getHttpStatus());
+        assertEquals(Error.DISPLAY_NAME_DUPLICATE.getCode(), thrown.getErrorCode());
     }
 
     @Test
@@ -236,11 +239,11 @@ class UserServiceImplTest {
         given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
 
         //when
-        NotFoundException thrown = assertThrows(NotFoundException.class, () -> userService.login(request));
+        LoginException thrown = assertThrows(LoginException.class, () -> userService.login(request));
 
         //then
-        assertEquals(HttpStatus.BAD_REQUEST, thrown.getStatus());
-        assertEquals("email or password is incorrect.", thrown.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, thrown.getHttpStatus());
+        assertEquals(Error.USER_NOT_FOUND.getCode(), thrown.getErrorCode());
     }
 
     @Test
@@ -263,14 +266,14 @@ class UserServiceImplTest {
 
 
         //when
-        PasswordNotMatchException thrown = assertThrows(
-                PasswordNotMatchException.class,
+        LoginException thrown = assertThrows(
+                LoginException.class,
                 () -> userService.login(request)
         );
 
         //then
-        assertEquals(HttpStatus.BAD_REQUEST, thrown.getStatus());
-        assertEquals("email or password is incorrect.", thrown.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST, thrown.getHttpStatus());
+        assertEquals(Error.PASSWORD_NOT_MATCH.getCode(), thrown.getErrorCode());
     }
 
     @Test

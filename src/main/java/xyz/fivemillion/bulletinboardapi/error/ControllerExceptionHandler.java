@@ -1,12 +1,10 @@
 package xyz.fivemillion.bulletinboardapi.error;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import xyz.fivemillion.bulletinboardapi.utils.ApiUtil;
 
 import javax.persistence.PersistenceException;
@@ -17,7 +15,7 @@ import static xyz.fivemillion.bulletinboardapi.utils.ApiUtil.fail;
 public class ControllerExceptionHandler {
 
     private ResponseEntity<ApiUtil.ApiResult<?>> newResponse(CustomException exception) {
-        return new ResponseEntity<>(fail(exception.getStatus(), exception.getMessage()), exception.getStatus());
+        return new ResponseEntity<>(fail(exception.getHttpStatus(), exception.getMessage()), exception.getHttpStatus());
     }
 
     private ResponseEntity<ApiUtil.ApiResult<?>> newResponse(HttpStatus status, Throwable throwable) {

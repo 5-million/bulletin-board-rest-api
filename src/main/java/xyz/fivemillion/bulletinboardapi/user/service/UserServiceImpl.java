@@ -1,13 +1,12 @@
 package xyz.fivemillion.bulletinboardapi.user.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import xyz.fivemillion.bulletinboardapi.error.DisplayNameDuplicateException;
-import xyz.fivemillion.bulletinboardapi.error.EmailDuplicateException;
-import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
-import xyz.fivemillion.bulletinboardapi.error.PasswordNotMatchException;
+import xyz.fivemillion.bulletinboardapi.error.DuplicateException;
+import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.IllegalPasswordException;
+import xyz.fivemillion.bulletinboardapi.error.LoginException;
 import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.UserRepository;
 import xyz.fivemillion.bulletinboardapi.user.dto.LoginRequest;
@@ -26,13 +25,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User register(UserRegisterRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword()))
-            throw new PasswordNotMatchException("password and confirm password do not match.");
+            throw new IllegalPasswordException(Error.CONFIRM_PASSWORD_NOT_MATCH);
 
         if (findByEmail(request.getEmail()) != null)
-            throw new EmailDuplicateException("duplicate email.");
+            throw new DuplicateException(Error.EMAIL_DUPLICATE);
 
         if (findByDisplayName(request.getDisplayName()) != null)
-            throw new DisplayNameDuplicateException("duplicate display name.");
+            throw new DuplicateException(Error.DISPLAY_NAME_DUPLICATE);
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -57,14 +56,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User login(LoginRequest request) {
-        String LOGIN_FAIL_MESSAGE = "email or password is incorrect.";
         User user = findByEmail(request.getEmail());
 
         if (user == null)
-            throw new NotFoundException(HttpStatus.BAD_REQUEST, LOGIN_FAIL_MESSAGE);
+            throw new LoginException(Error.USER_NOT_FOUND);
 
         if (!encryptUtil.isMatch(request.getPassword(), user.getPassword()))
-            throw new PasswordNotMatchException(HttpStatus.BAD_REQUEST, LOGIN_FAIL_MESSAGE);
+            throw new LoginException(Error.PASSWORD_NOT_MATCH);
 
         return user;
     }
