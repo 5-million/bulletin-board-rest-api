@@ -12,19 +12,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
 import xyz.fivemillion.bulletinboardapi.config.web.PageRequest;
+import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtTokenUtil;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.service.PostService;
 import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -83,7 +82,7 @@ class PostControllerTest {
         );
 
         //then
-        result.andExpect(status().isBadRequest());
+        result.andExpect(status().isUnauthorized());
     }
 
     @Test

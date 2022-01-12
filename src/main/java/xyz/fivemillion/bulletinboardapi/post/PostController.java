@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
-import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
+import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthentication;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.dto.SimplePost;
@@ -15,7 +16,6 @@ import xyz.fivemillion.bulletinboardapi.user.service.UserService;
 import xyz.fivemillion.bulletinboardapi.utils.ApiUtil.ApiResult;
 
 import javax.validation.Valid;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +35,7 @@ public class PostController {
             @Valid @RequestBody PostRegisterRequest request,
             @AuthenticationPrincipal JwtAuthentication authentication) {
         User writer = userService.findByEmail(authentication.getEmail());
-        if (writer == null) throw new NotFoundException(HttpStatus.BAD_REQUEST, "존재하지 않는 사용자의 요청입니다.");
+        if (writer == null) throw new UnAuthorizedException(Error.UNKNOWN_USER_REGISTER);
 
         return success(HttpStatus.CREATED, new SimplePost(postService.register(writer, request)));
     }

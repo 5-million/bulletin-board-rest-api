@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
-import xyz.fivemillion.bulletinboardapi.error.UnknownUserRegisterException;
+import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.repository.PostRepository;
@@ -23,7 +24,7 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public Post register(User writer, PostRegisterRequest request) {
         if (writer.getId() == null)
-            throw new UnknownUserRegisterException("등록되지 않은 사용자의 등록입니다.");
+            throw new UnAuthorizedException(Error.UNKNOWN_USER_REGISTER);
 
         try {
             Post post = Post.builder()
@@ -36,7 +37,7 @@ public class PostServiceImpl implements PostService {
 
             return post;
         } catch (IllegalStateException e) {
-            throw new UnknownUserRegisterException("등록되지 않은 사용자의 등록입니다.");
+            throw new UnAuthorizedException(Error.UNKNOWN_USER_REGISTER);
         }
     }
 

@@ -6,7 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import xyz.fivemillion.bulletinboardapi.error.UnknownUserRegisterException;
+import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.repository.PostRepository;
@@ -38,7 +39,11 @@ class PostServiceImplTest {
         PostRegisterRequest request = new PostRegisterRequest("title", "content");
 
         //when
-        assertThrows(UnknownUserRegisterException.class, () -> postService.register(writer, request));
+        UnAuthorizedException thrown =
+                assertThrows(UnAuthorizedException.class, () -> postService.register(writer, request));
+
+        //then
+        assertEquals(Error.UNKNOWN_USER_REGISTER, thrown.getError());
     }
 
     @Test
@@ -57,10 +62,13 @@ class PostServiceImplTest {
         doThrow(IllegalStateException.class).when(postRepository).save(any(Post.class));
 
         //when
-        assertThrows(
-                UnknownUserRegisterException.class,
+        UnAuthorizedException thrown = assertThrows(
+                UnAuthorizedException.class,
                 () -> postService.register(writer, request)
         );
+
+        //then
+        assertEquals(Error.UNKNOWN_USER_REGISTER, thrown.getError());
     }
 
     @Test
