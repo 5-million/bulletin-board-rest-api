@@ -8,12 +8,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.*;
 import xyz.fivemillion.bulletinboardapi.user.dto.DisplayNameCheckRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.EmailCheckRequest;
@@ -161,7 +161,7 @@ class UserControllerTest {
         );
 
         given(userService.register(any()))
-                .willThrow(new EmailDuplicateException("duplicate email"));
+                .willThrow(new DuplicateException(Error.EMAIL_DUPLICATE));
 
         //when
         ResultActions result = mvc.perform(
@@ -186,7 +186,7 @@ class UserControllerTest {
         );
 
         given(userService.register(any(UserRegisterRequest.class)))
-                .willThrow(new DisplayNameDuplicateException("duplicate display name"));
+                .willThrow(new DuplicateException(Error.DISPLAY_NAME_DUPLICATE));
 
         //when
         ResultActions result = performRegister(request);
@@ -207,7 +207,7 @@ class UserControllerTest {
         );
 
         given(userService.register(any(UserRegisterRequest.class)))
-                .willThrow(new PasswordNotMatchException("password not match"));
+                .willThrow(new IllegalPasswordException(Error.CONFIRM_PASSWORD_NOT_MATCH));
 
         //when
         ResultActions result = performRegister(request);
@@ -523,7 +523,7 @@ class UserControllerTest {
         //given
         LoginRequest request = new LoginRequest("abc@test.com", "password");
         given(userService.login(any(LoginRequest.class))).willThrow(
-                new NotFoundException(HttpStatus.BAD_REQUEST, "email or password is incorrect.")
+                new LoginException(Error.USER_NOT_FOUND)
         );
 
         //when
@@ -533,7 +533,7 @@ class UserControllerTest {
         result
                 .andExpect(status().isBadRequest())
                 .andExpect(
-                        jsonPath("$.error.message").value("email or password is incorrect.")
+                        jsonPath("$.error.message").value(LoginException.LOGIN_FAIL_MESSAGE)
                 );
     }
 
@@ -543,7 +543,7 @@ class UserControllerTest {
         //given
         LoginRequest request = new LoginRequest("abc@test.com", "password");
         given(userService.login(any(LoginRequest.class))).willThrow(
-                new PasswordNotMatchException(HttpStatus.BAD_REQUEST, "email or password is incorrect.")
+                new LoginException(Error.PASSWORD_NOT_MATCH)
         );
 
         //when
@@ -553,7 +553,7 @@ class UserControllerTest {
         result
                 .andExpect(status().isBadRequest())
                 .andExpect(
-                        jsonPath("$.error.message").value("email or password is incorrect.")
+                        jsonPath("$.error.message").value(LoginException.LOGIN_FAIL_MESSAGE)
                 );
     }
 
