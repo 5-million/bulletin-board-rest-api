@@ -6,8 +6,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthentication;
+import xyz.fivemillion.bulletinboardapi.post.dto.PostDetail;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.dto.SimplePost;
 import xyz.fivemillion.bulletinboardapi.post.service.PostService;
@@ -49,5 +51,14 @@ public class PostController {
                 .collect(Collectors.toList());
 
         return success(HttpStatus.OK, posts);
+    }
+
+    @GetMapping(path = "{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResult<PostDetail> getById(@PathVariable final Long id) {
+        if (id < 1)
+            throw new NotFoundException(Error.POST_NOT_FOUND);
+
+        return success(HttpStatus.OK, new PostDetail(postService.findById(id)));
     }
 }

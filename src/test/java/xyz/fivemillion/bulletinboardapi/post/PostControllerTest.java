@@ -6,14 +6,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.servlet.HttpEncodingAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import xyz.fivemillion.bulletinboardapi.config.web.PageRequest;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
+import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtTokenUtil;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.service.PostService;
@@ -24,17 +29,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static xyz.fivemillion.bulletinboardapi.config.web.PageRequest.DEFAULT_OFFSET_VALUE;
 import static xyz.fivemillion.bulletinboardapi.config.web.PageRequest.DEFAULT_SIZE_VALUE;
 
 @WebMvcTest(PostController.class)
+@Import(HttpEncodingAutoConfiguration.class)
 class PostControllerTest {
 
     @MockBean
@@ -46,11 +51,10 @@ class PostControllerTest {
     @Autowired
     private JwtTokenUtil tokenUtil;
 
-    private static final Gson gson = new Gson();
-
-    private static final String AUTH_HEADER_NAME = "X-FM-AUTH";
-    private static final String TOKEN_PREFIX = "Bearer ";
-    private static final String BASE_URL = "/api/v1/posts";
+    private final Gson gson = new Gson();
+    private final String AUTH_HEADER_NAME = "X-FM-AUTH";
+    private final String TOKEN_PREFIX = "Bearer ";
+    private final String BASE_URL = "/api/v1/posts";
 
     @Test
     @DisplayName("register fail: 인증되지 않은 사용자")
@@ -195,7 +199,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.response.title").value("title"))
                 .andExpect(jsonPath("$.response.writer").value("display name"))
                 .andExpect(jsonPath("$.response.views").value("0"))
-                .andExpect(jsonPath("$.response.commentsCount").value("0"))
+                .andExpect(jsonPath("$.response.commentCount").value("0"))
                 .andExpect(jsonPath("$.response.createAt").exists())
                 .andExpect(jsonPath("$.response.updateAt").exists());
     }
@@ -324,10 +328,104 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.response[0].title").value("title1"))
                 .andExpect(jsonPath("$.response[0].writer").value("display name"))
                 .andExpect(jsonPath("$.response[0].views").value("0"))
-                .andExpect(jsonPath("$.response[0].commentsCount").value("0"))
+                .andExpect(jsonPath("$.response[0].commentCount").value("0"))
                 .andExpect(jsonPath("$.response[1].title").value("title2"))
                 .andExpect(jsonPath("$.response[1].writer").value("display name"))
                 .andExpect(jsonPath("$.response[1].views").value("0"))
-                .andExpect(jsonPath("$.response[1].commentsCount").value("0"));
+                .andExpect(jsonPath("$.response[1].commentCount").value("0"));
+    }
+
+    @Test
+    @DisplayName("getById fail: 잘못된 형식의 PathVariable")
+    void getById_fail_illegalPathVariable() throws Exception {
+        //given
+        RequestBuilder requestBuilders = MockMvcRequestBuilders.get(BASE_URL + "/asd");
+
+        //when
+        ResultActions result = mvc.perform(requestBuilders);
+
+        //then
+        result.andDo(print())
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("getById"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("getById fail: 포스트 ID < 1")
+    void getById_fail_postIdLessThan1() throws Exception {
+        //given
+        RequestBuilder requestBuilder= MockMvcRequestBuilders.get(BASE_URL + "/-1");
+
+        //when
+        ResultActions result = mvc.perform(requestBuilder);
+
+        //then
+        result.andDo(print())
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("getById"))
+                .andExpect(status().isNotFound());
+
+        assertEquals(NotFoundException.class, result.andReturn().getResolvedException().getClass());
+        assertEquals(Error.POST_NOT_FOUND.getMessage(), result.andReturn().getResolvedException().getMessage());
+    }
+
+    @Test
+    @DisplayName("getById fail: 존재하지 않는 포스트")
+    void getById_fail_존재하지않는포스트() throws Exception {
+        //given
+        String url = BASE_URL + "/1";
+        given(postService.findById(anyLong())).willThrow(new NotFoundException(Error.POST_NOT_FOUND));
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        //then
+        result.andDo(print())
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("getById"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.message").value(Error.POST_NOT_FOUND.getMessage()));
+
+        assertEquals(NotFoundException.class, result.andReturn().getResolvedException().getClass());
+    }
+
+    @Test
+    @DisplayName("getById success")
+    void getById_success() throws Exception {
+        //given
+        String url = BASE_URL + "/1";
+        RequestBuilder requestBuilder = MockMvcRequestBuilders.get(url);
+
+        User writer = User.builder()
+                .email("abc@test.com")
+                .displayName("display name")
+                .build();
+
+        Post post = Post.builder()
+                .title("title")
+                .content("content")
+                .writer(writer)
+                .build();
+
+        given(postService.findById(anyLong())).willReturn(post);
+
+        //when
+        ResultActions result = mvc.perform(requestBuilder);
+
+        //then
+        result.andDo(print())
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("getById"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.title").value(post.getTitle()))
+                .andExpect(jsonPath("$.response.content").value(post.getContent()))
+                .andExpect(jsonPath("$.response.writer").value(writer.getDisplayName()))
+                .andExpect(jsonPath("$.response.views").value(post.getViews()))
+                .andExpect(jsonPath("$.response.commentCount").value(0L))
+                .andExpect(jsonPath("$.response.comments").isArray());
     }
 }

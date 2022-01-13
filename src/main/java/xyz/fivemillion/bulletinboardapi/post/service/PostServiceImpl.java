@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
@@ -44,5 +45,13 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<Post> findAll(Pageable pageable) {
         return postRepository.findAll(pageable.getOffset(), pageable.getSize());
+    }
+
+    @Override
+    @Transactional
+    public Post findById(Long id) {
+        Post post = postRepository.findById(id).orElseThrow(() -> new NotFoundException(Error.POST_NOT_FOUND));
+        post.increaseView();
+        return post;
     }
 }

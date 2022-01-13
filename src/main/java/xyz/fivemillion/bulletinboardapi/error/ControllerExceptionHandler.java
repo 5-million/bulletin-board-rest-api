@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import xyz.fivemillion.bulletinboardapi.utils.ApiUtil;
 
 import javax.persistence.PersistenceException;
@@ -31,7 +32,7 @@ public class ControllerExceptionHandler {
         return newResponse(exception);
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class})
+    @ExceptionHandler({MethodArgumentNotValidException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiUtil.ApiResult<?>> handleBadRequestException(Exception exception) {
         if (exception instanceof MethodArgumentNotValidException) {
             return newResponse(

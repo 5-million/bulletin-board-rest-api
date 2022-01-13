@@ -7,14 +7,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.repository.PostRepository;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -96,5 +100,44 @@ class PostServiceImplTest {
         assertEquals(request.getTitle(), result.getTitle());
         assertEquals(request.getContent(), result.getContent());
         assertEquals(writer.getId(), result.getWriter().getId());
+    }
+
+    @Test
+    @DisplayName("findById fail: 존재하지 않는 포스트")
+    void findById_fail_존재하지않는포스트() {
+        //given
+        given(postRepository.findById(anyLong())).willReturn(Optional.empty());
+
+        //when
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> postService.findById(1L));
+
+        //result
+        assertEquals(Error.POST_NOT_FOUND, thrown.getError());
+    }
+
+    @Test
+    @DisplayName("findById success")
+    void findById_success() {
+        //given
+        User writer = User.builder()
+                .email("abc@test.com")
+                .displayName("display name")
+                .build();
+
+        Post post = Post.builder()
+                .id(1L)
+                .title("title1")
+                .content("content1")
+                .writer(writer)
+                .build();
+
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+        //when
+        Post result = postService.findById(1L);
+
+        //then
+        assertEquals(post, result);
+        assertEquals(1, result.getViews());
     }
 }

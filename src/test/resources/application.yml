@@ -24,3 +24,8 @@ logging:
 jwt:
   issuer: issuer
   secret: secret
+
+server:
+  servlet:
+    encoding:
+      force-response: true
