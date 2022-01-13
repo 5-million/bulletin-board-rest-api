@@ -157,7 +157,7 @@ Swagger
         - RequestParam: offset & size
 
             - offset → default: 0
-            - size → deafult: 1000
+            - size → deafult: 100
 
         - 컨트롤러에 argument를 Pageable 객체로 받는다. 이를 위해 `HandlerMethodArgumentResolver`를 구현한다.
 
@@ -192,6 +192,7 @@ Swagger
               "views" : "조회수",
               "createAt" : "등록일",
               "updateAt" : "수정일",
+              "commentCount" : "댓글수",
               "comments" : [
                   {
                       "id" : "comment id",
@@ -237,9 +238,9 @@ Swagger
 4. JWT 설정
 5. posts 기능
     1. posts entity ✔︎
-    2. 여러 포스트 조회
-    3. 포스트 상세 조회
-    4. 포스트 등록
+    2. 여러 포스트 조회 ✔︎
+    3. 포스트 상세 조회 ✔︎
+    4. 포스트 등록 ✔︎
     5. 포스트 삭제
     6. 포스트 검색
 6. comments 기능
@@ -271,3 +272,14 @@ Swagger
   - PostService/Repository register 추가
   - 테스트용 샘플 데이터(data.sql) 추가
   - PostRepository findByWriter 추가
+- 22.01.06~08
+  - jwt 인증 추가
+- 22.01.10
+  - 포스트 등록 웹 추가: PostController.register
+- 22.01.11
+  - 모든 포스트 조회 기능 추가(페이징 적용)
+  - 테스트용 포스트 샘플 데이터 추가
+- 22.01.12
+  - 예외처리를 enum 형식의 Error 코드를 사용해 처리하도록 수정
+- 22.01.13
+  - 포스트 상세 조회 기능 추가
