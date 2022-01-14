@@ -46,4 +46,9 @@ public class JpaPostRepository implements PostRepository {
                 .where(user.id.eq(writerId))
                 .fetch();
     }
+
+    @Override
+    public void delete(Post post) {
+        em.remove(post);
+    }
 }

@@ -37,7 +37,7 @@ public class PostController {
             @Valid @RequestBody PostRegisterRequest request,
             @AuthenticationPrincipal JwtAuthentication authentication) {
         User writer = userService.findByEmail(authentication.getEmail());
-        if (writer == null) throw new UnAuthorizedException(Error.UNKNOWN_USER_REGISTER);
+        if (writer == null) throw new UnAuthorizedException(Error.UNKNOWN_USER);
 
         return success(HttpStatus.CREATED, new SimplePost(postService.register(writer, request)));
     }
@@ -60,5 +60,18 @@ public class PostController {
             throw new NotFoundException(Error.POST_NOT_FOUND);
 
         return success(HttpStatus.OK, new PostDetail(postService.findById(id)));
+    }
+
+    @DeleteMapping(path = "{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable final Long id, @AuthenticationPrincipal JwtAuthentication authentication) {
+        if (id < 1)
+            throw new NotFoundException(Error.POST_NOT_FOUND);
+
+        User writer = userService.findByEmail(authentication.getEmail());
+        if (writer == null)
+            throw new UnAuthorizedException(Error.UNKNOWN_USER);
+
+        postService.delete(writer, id);
     }
 }

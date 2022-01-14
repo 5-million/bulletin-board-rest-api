@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.ForbiddenException;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
@@ -47,7 +48,7 @@ class PostServiceImplTest {
                 assertThrows(UnAuthorizedException.class, () -> postService.register(writer, request));
 
         //then
-        assertEquals(Error.UNKNOWN_USER_REGISTER, thrown.getError());
+        assertEquals(Error.UNKNOWN_USER, thrown.getError());
     }
 
     @Test
@@ -72,7 +73,7 @@ class PostServiceImplTest {
         );
 
         //then
-        assertEquals(Error.UNKNOWN_USER_REGISTER, thrown.getError());
+        assertEquals(Error.UNKNOWN_USER, thrown.getError());
     }
 
     @Test
@@ -139,5 +140,73 @@ class PostServiceImplTest {
         //then
         assertEquals(post, result);
         assertEquals(1, result.getViews());
+    }
+
+    @Test
+    @DisplayName("delete fail: 존재하지 않는 포스트")
+    void delete_fail_존재하지않는포스트() {
+        //given
+        given(postRepository.findById(anyLong())).willReturn(Optional.empty());
+
+        //when
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> postService.delete(any(User.class), 1L));
+
+        //then
+        assertEquals(Error.POST_NOT_FOUND, thrown.getError());
+    }
+
+    @Test
+    @DisplayName("delete fail: Forbidden(포스트 작성자가 아님)")
+    void delete_fail_forbidden() {
+        //given
+        User requester = User.builder()
+                .email("abcd@test.com")
+                .displayName("display name1")
+                .build();
+
+        User writer = User.builder()
+                .email("abc@test.com")
+                .displayName("display name")
+                .build();
+
+        Post post = Post.builder()
+                .id(1L)
+                .title("title")
+                .content("content")
+                .writer(writer)
+                .build();
+
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+        //when
+        ForbiddenException thrown = assertThrows(ForbiddenException.class, () -> postService.delete(requester, 1L));
+
+        //then
+        assertEquals(Error.NOT_POST_WRITER, thrown.getError());
+    }
+
+    @Test
+    @DisplayName("delete success")
+    void delete_success() {
+        //given
+        User writer = User.builder()
+                .email("abc@test.com")
+                .displayName("display name")
+                .build();
+
+        Post post = Post.builder()
+                .id(1L)
+                .title("title")
+                .content("content")
+                .writer(writer)
+                .build();
+
+        given(postRepository.findById(1L)).willReturn(Optional.of(post));
+
+        //when
+        postService.delete(writer, 1L);
+
+        //then
+        verify(postRepository, times(1)).delete(post);
     }
 }

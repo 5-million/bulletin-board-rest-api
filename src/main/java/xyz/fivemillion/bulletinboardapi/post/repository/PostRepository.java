@@ -11,4 +11,5 @@ public interface PostRepository {
     Optional<Post> findById(long id);
     List<Post> findAll(long offset, long size);
     List<Post> findByWriter(Long writerId);
+    void delete(Post post);
 }

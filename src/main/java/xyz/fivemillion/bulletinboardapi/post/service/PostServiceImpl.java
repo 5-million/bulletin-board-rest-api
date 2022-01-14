@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.ForbiddenException;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
@@ -25,7 +26,7 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public Post register(User writer, PostRegisterRequest request) {
         if (writer.getId() == null)
-            throw new UnAuthorizedException(Error.UNKNOWN_USER_REGISTER);
+            throw new UnAuthorizedException(Error.UNKNOWN_USER);
 
         try {
             Post post = Post.builder()
@@ -38,7 +39,7 @@ public class PostServiceImpl implements PostService {
 
             return post;
         } catch (IllegalStateException e) {
-            throw new UnAuthorizedException(Error.UNKNOWN_USER_REGISTER);
+            throw new UnAuthorizedException(Error.UNKNOWN_USER);
         }
     }
 
@@ -53,5 +54,15 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(id).orElseThrow(() -> new NotFoundException(Error.POST_NOT_FOUND));
         post.increaseView();
         return post;
+    }
+
+    @Override
+    @Transactional
+    public void delete(User writer, Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new NotFoundException(Error.POST_NOT_FOUND));
+        if (!writer.equals(post.getWriter()))
+            throw new ForbiddenException(Error.NOT_POST_WRITER);
+
+        postRepository.delete(post);
     }
 }
