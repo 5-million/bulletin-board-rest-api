@@ -28,6 +28,7 @@ import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -617,5 +618,86 @@ class PostControllerTest {
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("delete"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("search success: empty")
+    void search_success_result_empty() throws Exception {
+        //given
+        String q = "ab";
+        String url = BASE_URL + "/search";
+        given(postService.findByQuery(anyString())).willReturn(Collections.emptyList());
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .param("q", q)
+        ).andDo(print());
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+
+        //then
+        result
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isArray());
+
+        verify(postService, times(1)).findByQuery(captor.capture());
+        assertEquals(q, captor.getValue());
+    }
+
+    @Test
+    @DisplayName("search success: exist")
+    void search_success_result_exist() throws Exception {
+        //given
+        User user = User.builder()
+                .email("abc@test.com")
+                .displayName("display name")
+                .build();
+
+        Post post1 = Post.builder()
+                .title("title1")
+                .content("content1")
+                .writer(user)
+                .build();
+
+        Post post2 = Post.builder()
+                .title("title2")
+                .content("content2")
+                .writer(user)
+                .build();
+
+        List<Post> posts = new ArrayList<>();
+        posts.add(post1);
+        posts.add(post2);
+
+        String url = BASE_URL + "/search";
+        String query = "title";
+        given(postService.findByQuery(anyString())).willReturn(posts);
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .param("q", query)
+        ).andDo(print());
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+
+        //then
+        result
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isArray())
+                .andExpect(jsonPath("$.response[0].title").value(post1.getTitle()))
+                .andExpect(jsonPath("$.response[0].writer").value(user.getDisplayName()))
+                .andExpect(jsonPath("$.response[0].views").value(post1.getViews()))
+                .andExpect(jsonPath("$.response[0].commentCount").value("0"))
+                .andExpect(jsonPath("$.response[1].title").value(post2.getTitle()))
+                .andExpect(jsonPath("$.response[1].writer").value(user.getDisplayName()))
+                .andExpect(jsonPath("$.response[1].views").value(post2.getViews()))
+                .andExpect(jsonPath("$.response[1].commentCount").value("0"));
+
+        verify(postService, times(1)).findByQuery(captor.capture());
+        assertEquals(query, captor.getValue());
     }
 }

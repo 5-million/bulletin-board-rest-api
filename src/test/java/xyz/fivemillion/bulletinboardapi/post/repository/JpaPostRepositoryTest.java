@@ -145,4 +145,19 @@ class JpaPostRepositoryTest {
             assertEquals(res.getWriter().getId(), writerId);
         }
     }
+
+    @Test
+    @DisplayName("findByQuery")
+    void findByQuery() {
+        //given
+        String query = "ab";
+
+        //when
+        List<Post> result = postRepository.findByQuery(query);
+
+        //then
+        for (Post post : result) {
+            assertTrue(post.getTitle().contains(query) || post.getContent().contains(query));
+        }
+    }
 }

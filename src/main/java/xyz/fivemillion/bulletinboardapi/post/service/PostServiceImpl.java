@@ -57,6 +57,11 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public List<Post> findByQuery(String query) {
+        return postRepository.findByQuery(query);
+    }
+
+    @Override
     @Transactional
     public void delete(User writer, Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new NotFoundException(Error.POST_NOT_FOUND));

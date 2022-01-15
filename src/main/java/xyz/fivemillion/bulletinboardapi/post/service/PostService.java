@@ -12,5 +12,6 @@ public interface PostService {
     Post register(User writer, PostRegisterRequest request);
     List<Post> findAll(Pageable pageable);
     Post findById(Long id);
+    List<Post> findByQuery(String query);
     void delete(User writer, Long postId);
 }

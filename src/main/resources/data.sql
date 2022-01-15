@@ -102,3 +102,8 @@ INSERT INTO posts(id, writer, title, content, views, create_at, update_at) VALUE
 INSERT INTO posts(id, writer, title, content, views, create_at, update_at) VALUES (99, 1, 'title99', 'content99', 518, NOW(), NOW());
 INSERT INTO posts(id, writer, title, content, views, create_at, update_at) VALUES (100, 1, 'title100', 'content100', 72, NOW(), NOW());
 INSERT INTO posts(id, writer, title, content, views, create_at, update_at) VALUES (101, 1, 'title101', 'content101', 31, NOW(), NOW());
+INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (1, 'abced', 'efghi', 111, NOW(), NOW());
+INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (2, 'fbgfbsfdga', 'rethgbbvxcvad', 111, NOW(), NOW());
+INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (3, 'pqoalksdlkvzcxmn', 'rfkabjglkswfjthlkjzcvblawdf', 111, NOW(), NOW());
+INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (2, 'qweklnzxcfbmnh', 'nhonpogipwfd', 111, NOW(), NOW());
+INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (1, 'poivkxcvhoknlkcx', 'foblkvjlbkabcfldk', 111, NOW(), NOW());

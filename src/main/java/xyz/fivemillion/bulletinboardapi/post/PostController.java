@@ -74,4 +74,15 @@ public class PostController {
 
         postService.delete(writer, id);
     }
+
+    @GetMapping(path = "search")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResult<List<SimplePost>> search(@RequestParam("q") final String query) {
+        List<SimplePost> posts = postService.findByQuery(query)
+                .stream()
+                .map(SimplePost::new)
+                .collect(Collectors.toList());
+
+        return success(HttpStatus.OK, posts);
+    }
 }
