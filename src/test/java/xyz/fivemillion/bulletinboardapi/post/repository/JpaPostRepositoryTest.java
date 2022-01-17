@@ -84,8 +84,8 @@ class JpaPostRepositoryTest {
 
         //then
         assertEquals(100, result.size());
-        assertEquals(101, result.get(0).getId());
-        assertEquals(2, result.get(99).getId());
+        assertEquals(106, result.get(0).getId());
+        assertEquals(7, result.get(99).getId());
     }
 
     @Test
@@ -100,7 +100,7 @@ class JpaPostRepositoryTest {
 
         //then
         assertEquals(1, result.size());
-        assertEquals(99, result.get(0).getId());
+        assertEquals(104, result.get(0).getId());
     }
 
     @Test
@@ -115,8 +115,8 @@ class JpaPostRepositoryTest {
 
         //then
         assertEquals(5, result.size());
-        assertEquals(96, result.get(0).getId());
-        assertEquals(92, result.get(result.size() - 1).getId());
+        assertEquals(101, result.get(0).getId());
+        assertEquals(97, result.get(result.size() - 1).getId());
     }
 
     @Test
