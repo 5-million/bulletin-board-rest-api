@@ -7,22 +7,31 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.*;
+import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthentication;
+import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthenticationToken;
+import xyz.fivemillion.bulletinboardapi.jwt.JwtTokenUtil;
 import xyz.fivemillion.bulletinboardapi.user.dto.DisplayNameCheckRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.EmailCheckRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.LoginRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
+import xyz.fivemillion.bulletinboardapi.utils.ApiUtil;
 
 import javax.persistence.PersistenceException;
+import java.util.ArrayList;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -34,8 +43,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
 
     @Mock UserService userService;
+    @Mock AuthenticationManager authenticationManager;
+    @Spy JwtTokenUtil jwtTokenUtil;
     @InjectMocks private UserController userController;
-
+    
     private MockMvc mvc;
     private Gson gson;
 
@@ -47,6 +58,9 @@ class UserControllerTest {
                 .alwaysDo(print())
                 .build();
         gson = new Gson();
+
+        ReflectionTestUtils.setField(jwtTokenUtil, "issuer", "5million");
+        ReflectionTestUtils.setField(jwtTokenUtil, "secret", "secret");
     }
 
     private ResultActions performRegister(UserRegisterRequest request) throws Exception {
@@ -522,7 +536,7 @@ class UserControllerTest {
     void login_fail_userNotFound() throws Exception {
         //given
         LoginRequest request = new LoginRequest("abc@test.com", "password");
-        given(userService.login(any(LoginRequest.class))).willThrow(
+        given(authenticationManager.authenticate(any(JwtAuthenticationToken.class))).willThrow(
                 new LoginException(Error.USER_NOT_FOUND)
         );
 
@@ -535,6 +549,8 @@ class UserControllerTest {
                 .andExpect(
                         jsonPath("$.error.message").value(LoginException.LOGIN_FAIL_MESSAGE)
                 );
+
+        assertEquals(Error.USER_NOT_FOUND, ((CustomException) result.andReturn().getResolvedException()).getError());
     }
 
     @Test
@@ -542,7 +558,7 @@ class UserControllerTest {
     void login_fail_incorrectPwd() throws Exception {
         //given
         LoginRequest request = new LoginRequest("abc@test.com", "password");
-        given(userService.login(any(LoginRequest.class))).willThrow(
+        given(authenticationManager.authenticate(any(JwtAuthenticationToken.class))).willThrow(
                 new LoginException(Error.PASSWORD_NOT_MATCH)
         );
 
@@ -555,6 +571,8 @@ class UserControllerTest {
                 .andExpect(
                         jsonPath("$.error.message").value(LoginException.LOGIN_FAIL_MESSAGE)
                 );
+
+        assertEquals(Error.PASSWORD_NOT_MATCH, ((CustomException) result.andReturn().getResolvedException()).getError());
     }
 
     @Test
@@ -566,12 +584,19 @@ class UserControllerTest {
 
         LoginRequest request = new LoginRequest(email, "password");
 
-        given(userService.login(any(LoginRequest.class))).willReturn(
-                User.builder()
-                        .email(email)
-                        .displayName(displayName)
-                        .build()
+        User user = User.builder()
+                .email(email)
+                .displayName(displayName)
+                .build();
+
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(
+                new JwtAuthentication(user.getEmail(), user.getDisplayName()),
+                null,
+                new ArrayList<>()
         );
+        authentication.setDetails(user);
+
+        given(authenticationManager.authenticate(any(JwtAuthenticationToken.class))).willReturn(authentication);
 
         //when
         ResultActions result = performLogin(request);
@@ -579,8 +604,11 @@ class UserControllerTest {
         //then
         result
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.email").value(email))
-                .andExpect(jsonPath("$.response.displayName").value(displayName))
-                .andExpect(jsonPath("$.response.createAt").exists());
+                .andExpect(jsonPath("$.response").isString())
+                .andExpect(jsonPath("$.response").exists());
+
+        String token = (String) gson.fromJson(result.andReturn().getResponse().getContentAsString(), ApiUtil.ApiResult.class).getResponse();
+        assertEquals(user.getEmail(), jwtTokenUtil.getEmailFromToken(token));
+        assertEquals(user.getDisplayName(), jwtTokenUtil.getDisplayNameFromToken(token));
     }
 }

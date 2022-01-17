@@ -265,3 +265,5 @@ Swagger
     - DTO: EmailCheckRequest, DisplayNameCheckRequest 추가 + LoginRequest 추가
     - UserService: login 추가
     - Exception: NotFoundException(extends CustomException) 추가
+- 22.01.17
+  - jwt 적용으로 인한 login 테스트 코드 수정
