@@ -4,9 +4,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -27,24 +24,20 @@ public class JwtTokenUtil {
     private String secret;
 
     public String getEmailFromToken(String token) {
-        try {
-            return getClaimFromToken(token, Claims::getSubject);
-        } catch (Exception e) {
-            throw new NotFoundException(HttpStatus.UNAUTHORIZED, "user name not found");
-        }
+        return getClaimFromToken(token, Claims::getSubject);
     }
 
     public String getDisplayNameFromToken(String token) {
-        try {
-            return (String) getAllClaimsFromToken(token).get("displayName");
-        } catch (Exception e) {
-            throw new NotFoundException(HttpStatus.UNAUTHORIZED, "display name not found");
-        }
+        return getClaimFromToken(token, "displayName");
     }
 
-    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+    private <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claimsResolver.apply(claims);
+    }
+
+    private String getClaimFromToken(String token, String claim) {
+        return (String) getAllClaimsFromToken(token).get(claim);
     }
 
     private Claims getAllClaimsFromToken(String token) {
@@ -92,6 +85,7 @@ public class JwtTokenUtil {
     }
 
     private Key createSigningKey() {
+        System.out.println(secret);
         byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(secret);
         return new SecretKeySpec(apiKeySecretBytes, SignatureAlgorithm.HS256.getJcaName());
     }

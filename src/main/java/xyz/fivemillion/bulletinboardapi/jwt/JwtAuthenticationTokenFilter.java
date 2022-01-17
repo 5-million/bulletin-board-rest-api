@@ -41,7 +41,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch (SignatureException | MalformedJwtException | UnsupportedJwtException exception) {
+            } catch (SignatureException | MalformedJwtException | UnsupportedJwtException | IllegalArgumentException exception) {
                 request.setAttribute("exception", "invalid token");
             } catch (ExpiredJwtException exception) {
                 request.setAttribute("exception", "expired token");
