@@ -48,10 +48,12 @@ public class JpaPostRepository implements PostRepository {
     }
 
     @Override
-    public List<Post> findByQuery(String q) {
+    public List<Post> findByQuery(String q, long offset, long size) {
         return query.selectFrom(post)
                 .join(post.writer, user)
                 .where(post.title.contains(q).or(post.content.contains(q)))
+                .offset(offset)
+                .limit(size)
                 .fetch();
     }
 

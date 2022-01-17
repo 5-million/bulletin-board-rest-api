@@ -13,6 +13,8 @@ import javax.persistence.EntityManager;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static xyz.fivemillion.bulletinboardapi.config.web.PageRequest.DEFAULT_OFFSET_VALUE;
+import static xyz.fivemillion.bulletinboardapi.config.web.PageRequest.DEFAULT_SIZE_VALUE;
 
 @DataJpaTest
 class JpaPostRepositoryTest {
@@ -153,7 +155,7 @@ class JpaPostRepositoryTest {
         String query = "ab";
 
         //when
-        List<Post> result = postRepository.findByQuery(query);
+        List<Post> result = postRepository.findByQuery(query, DEFAULT_OFFSET_VALUE, DEFAULT_SIZE_VALUE);
 
         //then
         for (Post post : result) {

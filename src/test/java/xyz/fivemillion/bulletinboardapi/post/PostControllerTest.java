@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import xyz.fivemillion.bulletinboardapi.config.web.PageRequest;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
 import xyz.fivemillion.bulletinboardapi.error.CustomException;
@@ -621,19 +623,14 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("search success: empty")
-    void search_success_result_empty() throws Exception {
+    @DisplayName("search: q=null")
+    void search_qIsNull() throws Exception {
         //given
-        String q = "ab";
         String url = BASE_URL + "/search";
-        given(postService.findByQuery(anyString())).willReturn(Collections.emptyList());
+        given(postService.findAll(any(Pageable.class))).willReturn(Collections.emptyList());
 
         //when
-        ResultActions result = mvc.perform(
-                MockMvcRequestBuilders.get(url)
-                        .param("q", q)
-        ).andDo(print());
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        ResultActions result = mvc.perform(MockMvcRequestBuilders.get(url)).andDo(print());
 
         //then
         result
@@ -642,8 +639,197 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.response").isArray());
 
-        verify(postService, times(1)).findByQuery(captor.capture());
-        assertEquals(q, captor.getValue());
+        verify(postService, times(1)).findAll(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("search: (offset=null, size=null)")
+    void search_null_null() throws Exception {
+        //given
+        String url = BASE_URL + "/search";
+        String query = "query";
+
+        given(postService.findByQuery(anyString(), any(Pageable.class))).willReturn(Collections.emptyList());
+
+        //when
+        ResultActions result = mvc.perform(MockMvcRequestBuilders.get(url).param("q", query)).andDo(print());
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        //then
+        result
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isArray());
+
+        verify(postService, times(1)).findByQuery(queryCaptor.capture(), pageableCaptor.capture());
+        assertEquals(query, queryCaptor.getValue());
+        assertEquals(DEFAULT_OFFSET_VALUE, pageableCaptor.getValue().getOffset());
+        assertEquals(DEFAULT_SIZE_VALUE, pageableCaptor.getValue().getSize());
+    }
+
+    @Test
+    @DisplayName("search: (offset=5, size=null)")
+    void search_5_null() throws Exception {
+        //given
+        String url = BASE_URL + "/search";
+        String query = "query"; String offset = "5";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("q", query);
+        params.add("offset", offset);
+
+        given(postService.findByQuery(anyString(), any(Pageable.class))).willReturn(Collections.emptyList());
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .params(params)
+        ).andDo(print());
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        //then
+        result
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isArray());
+
+        verify(postService, times(1)).findByQuery(queryCaptor.capture(), pageableCaptor.capture());
+        assertEquals(query, queryCaptor.getValue());
+        assertEquals(Long.parseLong(offset), pageableCaptor.getValue().getOffset());
+        assertEquals(DEFAULT_SIZE_VALUE, pageableCaptor.getValue().getSize());
+    }
+
+    @Test
+    @DisplayName("search: (offset=null, size=5)")
+    void search_null_5() throws Exception {
+        //given
+        String url = BASE_URL + "/search";
+        String query = "query"; String size = "5";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("q", query);
+        params.add("size", size);
+
+        given(postService.findByQuery(anyString(), any(Pageable.class))).willReturn(Collections.emptyList());
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .params(params)
+        ).andDo(print());
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        //then
+        result
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isArray());
+
+        verify(postService, times(1)).findByQuery(queryCaptor.capture(), pageableCaptor.capture());
+        assertEquals(query, queryCaptor.getValue());
+        assertEquals(DEFAULT_OFFSET_VALUE, pageableCaptor.getValue().getOffset());
+        assertEquals(Long.parseLong(size), pageableCaptor.getValue().getSize());
+    }
+
+    @Test
+    @DisplayName("search: (offset=5, size=5)")
+    void search_5_5() throws Exception {
+        //given
+        String url = BASE_URL + "/search";
+        String query = "query"; String offset = "5"; String size = "5";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("q", query);
+        params.add("offset", offset);
+        params.add("size", size);
+
+        given(postService.findByQuery(anyString(), any(Pageable.class))).willReturn(Collections.emptyList());
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .params(params)
+        ).andDo(print());
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        //then
+        result
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isArray());
+
+        verify(postService, times(1)).findByQuery(queryCaptor.capture(), pageableCaptor.capture());
+        assertEquals(query, queryCaptor.getValue());
+        assertEquals(Long.parseLong(offset), pageableCaptor.getValue().getOffset());
+        assertEquals(Long.parseLong(size), pageableCaptor.getValue().getSize());
+    }
+
+    @Test
+    @DisplayName("search: (offset<0, size<0)")
+    void search_negative_negative() throws Exception {
+        //given
+        String url = BASE_URL + "/search";
+        String query = "query"; String offset = "-1"; String size = "-1";
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("q", query);
+        params.add("offset", offset);
+        params.add("size", size);
+
+        given(postService.findByQuery(anyString(), any(Pageable.class))).willReturn(Collections.emptyList());
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .params(params)
+        ).andDo(print());
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        //then
+        result
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isArray());
+
+        verify(postService, times(1)).findByQuery(queryCaptor.capture(), pageableCaptor.capture());
+        assertEquals(query, queryCaptor.getValue());
+        assertEquals(DEFAULT_OFFSET_VALUE, pageableCaptor.getValue().getOffset());
+        assertEquals(DEFAULT_SIZE_VALUE, pageableCaptor.getValue().getSize());
+    }
+
+    @Test
+    @DisplayName("search: empty")
+    void search_success_result_empty() throws Exception {
+        //given
+        String q = "ab";
+        String url = BASE_URL + "/search";
+        given(postService.findByQuery(anyString(), any(Pageable.class))).willReturn(Collections.emptyList());
+
+        //when
+        ResultActions result = mvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .param("q", q)
+        ).andDo(print());
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        //then
+        result
+                .andExpect(handler().handlerType(PostController.class))
+                .andExpect(handler().methodName("search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isArray());
+
+        verify(postService, times(1)).findByQuery(queryCaptor.capture(), pageableCaptor.capture());
+        assertEquals(q, queryCaptor.getValue());
+        assertEquals(DEFAULT_OFFSET_VALUE, pageableCaptor.getValue().getOffset());
+        assertEquals(DEFAULT_SIZE_VALUE, pageableCaptor.getValue().getSize());
     }
 
     @Test
@@ -673,14 +859,15 @@ class PostControllerTest {
 
         String url = BASE_URL + "/search";
         String query = "title";
-        given(postService.findByQuery(anyString())).willReturn(posts);
+        given(postService.findByQuery(anyString(), any(Pageable.class))).willReturn(posts);
 
         //when
         ResultActions result = mvc.perform(
                 MockMvcRequestBuilders.get(url)
                         .param("q", query)
         ).andDo(print());
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
         //then
         result
@@ -697,7 +884,9 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.response[1].views").value(post2.getViews()))
                 .andExpect(jsonPath("$.response[1].commentCount").value("0"));
 
-        verify(postService, times(1)).findByQuery(captor.capture());
-        assertEquals(query, captor.getValue());
+        verify(postService, times(1)).findByQuery(queryCaptor.capture(), pageableCaptor.capture());
+        assertEquals(query, queryCaptor.getValue());
+        assertEquals(DEFAULT_OFFSET_VALUE, pageableCaptor.getValue().getOffset());
+        assertEquals(DEFAULT_SIZE_VALUE, pageableCaptor.getValue().getSize());
     }
 }

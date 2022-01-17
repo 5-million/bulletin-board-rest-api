@@ -77,8 +77,13 @@ public class PostController {
 
     @GetMapping(path = "search")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<List<SimplePost>> search(@RequestParam("q") final String query) {
-        List<SimplePost> posts = postService.findByQuery(query)
+    public ApiResult<List<SimplePost>> search(
+            @RequestParam(value = "q", required = false) final String query,
+            final Pageable pageable) {
+        if (query == null)
+            return getAll(pageable);
+
+        List<SimplePost> posts = postService.findByQuery(query, pageable)
                 .stream()
                 .map(SimplePost::new)
                 .collect(Collectors.toList());

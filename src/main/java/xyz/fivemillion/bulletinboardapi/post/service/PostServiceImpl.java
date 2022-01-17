@@ -57,8 +57,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> findByQuery(String query) {
-        return postRepository.findByQuery(query);
+    public List<Post> findByQuery(String query, Pageable pageable) {
+        return postRepository.findByQuery(query, pageable.getOffset(), pageable.getSize());
     }
 
     @Override
