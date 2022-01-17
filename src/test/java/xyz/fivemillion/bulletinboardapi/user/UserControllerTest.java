@@ -46,7 +46,7 @@ class UserControllerTest {
     @Mock AuthenticationManager authenticationManager;
     @Spy JwtTokenUtil jwtTokenUtil;
     @InjectMocks private UserController userController;
-    
+
     private MockMvc mvc;
     private Gson gson;
 

@@ -267,3 +267,4 @@ Swagger
     - Exception: NotFoundException(extends CustomException) 추가
 - 22.01.17
   - jwt 적용으로 인한 login 테스트 코드 수정
+  - jwt의 페이로드에서 email, displayName 클레임이 없다면 Unauthorized를 반환하도록 수정
