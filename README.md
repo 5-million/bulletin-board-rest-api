@@ -292,3 +292,5 @@ Swagger
   - 포스트 검색 기능 수정: 페이징 적용, 검색어가 없을 경우 페이징만큼 모든 포스트 조회
   - jwt 적용으로 인한 login 테스트 코드 수정
   - jwt의 페이로드에서 email, displayName 클레임이 없다면 Unauthorized를 반환하도록 수정
+- 22.01.19
+  - 객체의 값을 검증하는 CheckUtil 클래스 추가
