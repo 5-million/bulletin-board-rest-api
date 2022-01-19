@@ -4,11 +4,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
+import xyz.fivemillion.bulletinboardapi.post.comment.Comment;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "posts")
@@ -34,6 +37,9 @@ public class Post {
 
     @Column
     private long views = 0;
+
+    @OneToMany(mappedBy = "post")
+    private List<Comment> comments = new ArrayList<>();
 
     @Column
     private final LocalDateTime createAt = LocalDateTime.now();

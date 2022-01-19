@@ -14,6 +14,8 @@ public enum Error {
     UNKNOWN_USER(UNAUTHORIZED, "P201", "등록되지 않은 사용자의 요청입니다."),
     NOT_POST_WRITER(FORBIDDEN, "P202", "포스트 작성자만이 삭제할 수 있습니다."),
     POST_NOT_FOUND(NOT_FOUND, "P301", "존재하지 않는 포스트입니다."),
+    UNKNOWN_USER_OR_POST(BAD_REQUEST, "C101", "등록되지 않은 사용자 또는 포스트에 대한 요청입니다."),
+    CONTENT_IS_NULL_OR_BLANK(BAD_REQUEST, "C102", "내용이 공백 또는 존재하지 않습니다."),
     ;
 
     private HttpStatus status;

@@ -3,6 +3,7 @@ package xyz.fivemillion.bulletinboardapi.user;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 import xyz.fivemillion.bulletinboardapi.post.Post;
+import xyz.fivemillion.bulletinboardapi.post.comment.Comment;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
@@ -38,6 +39,9 @@ public class User {
 
     @OneToMany(mappedBy = "writer")
     private List<Post> posts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "writer")
+    private List<Comment> comments = new ArrayList<>();
 
     @Builder
     private User(Long id, String email, String password, String displayName) {

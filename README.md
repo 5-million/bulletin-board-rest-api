@@ -294,3 +294,5 @@ Swagger
   - jwt의 페이로드에서 email, displayName 클레임이 없다면 Unauthorized를 반환하도록 수정
 - 22.01.19
   - 객체의 값을 검증하는 CheckUtil 클래스 추가
+  - 댓글 entity 추가
+  - 댓글 service와 repository에 댓글 등록 추가
