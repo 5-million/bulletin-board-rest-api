@@ -16,6 +16,7 @@ public enum Error {
     POST_NOT_FOUND(NOT_FOUND, "P301", "존재하지 않는 포스트입니다."),
     UNKNOWN_USER_OR_POST(BAD_REQUEST, "C101", "등록되지 않은 사용자 또는 포스트에 대한 요청입니다."),
     CONTENT_IS_NULL_OR_BLANK(BAD_REQUEST, "C102", "내용이 공백 또는 존재하지 않습니다."),
+    UNKNOWN_POST(BAD_REQUEST, "C103" , "존재하지 않는 포스트에 대한 요청입니다."),
     ;
 
     private HttpStatus status;

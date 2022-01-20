@@ -70,7 +70,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint())
                 .and()
                 .authorizeHttpRequests()
-                .antMatchers(HttpMethod.POST, BASE_URL + "/posts").authenticated()
+                .antMatchers(HttpMethod.POST, BASE_URL + "/posts", BASE_URL + "/comment").authenticated()
                 .antMatchers(HttpMethod.DELETE, BASE_URL + "/posts/{id}").authenticated()
                 .anyRequest().permitAll()
                 .and()

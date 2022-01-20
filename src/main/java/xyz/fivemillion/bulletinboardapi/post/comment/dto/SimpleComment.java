@@ -1,5 +1,7 @@
 package xyz.fivemillion.bulletinboardapi.post.comment.dto;
 
+import xyz.fivemillion.bulletinboardapi.post.comment.Comment;
+
 import java.time.LocalDateTime;
 
 public class SimpleComment {
@@ -18,6 +20,14 @@ public class SimpleComment {
         this.postId = postId;
         this.content = content;
         this.createAt = createAt;
+    }
+
+    public SimpleComment(Comment comment) {
+        this.commentId = comment.getId();
+        this.writer = comment.getWriter().getDisplayName();
+        this.postId = comment.getPost().getId();
+        this.content = comment.getContent();
+        this.createAt = comment.getCreateAt();
     }
 
     public Long getCommentId() {
