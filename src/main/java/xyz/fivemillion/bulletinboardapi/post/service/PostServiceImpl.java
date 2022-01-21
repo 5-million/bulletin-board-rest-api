@@ -49,11 +49,14 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
     public Post findById(Long id) {
-        Post post = postRepository.findById(id).orElseThrow(() -> new NotFoundException(Error.POST_NOT_FOUND));
+        return postRepository.findById(id).orElseThrow(() -> new NotFoundException(Error.POST_NOT_FOUND));
+    }
+
+    @Override
+    @Transactional
+    public void increaseView(Post post) {
         post.increaseView();
-        return post;
     }
 
     @Override

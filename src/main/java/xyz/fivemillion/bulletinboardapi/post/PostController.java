@@ -59,7 +59,9 @@ public class PostController {
         if (id < 1)
             throw new NotFoundException(Error.POST_NOT_FOUND);
 
-        return success(HttpStatus.OK, new PostDetail(postService.findById(id)));
+        Post post = postService.findById(id);
+        postService.increaseView(post);
+        return success(HttpStatus.OK, new PostDetail(post));
     }
 
     @DeleteMapping(path = "{id}")

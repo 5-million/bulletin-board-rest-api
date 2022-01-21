@@ -424,6 +424,7 @@ class PostControllerTest {
         ResultActions result = mvc.perform(requestBuilder);
 
         //then
+        verify(postService, times(1)).increaseView(any(Post.class));
         result.andDo(print())
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getById"))

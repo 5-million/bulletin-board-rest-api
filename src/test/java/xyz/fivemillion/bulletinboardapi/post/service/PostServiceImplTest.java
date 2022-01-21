@@ -139,7 +139,6 @@ class PostServiceImplTest {
 
         //then
         assertEquals(post, result);
-        assertEquals(1, result.getViews());
     }
 
     @Test

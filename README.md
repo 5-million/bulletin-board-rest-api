@@ -299,3 +299,5 @@ Swagger
 - 22.01.20
   - 댓글 등록하는 controller 추가
   - test용 ResultActionsUtil 추가
+- 22.01.21
+  - PostService의 findById에서 조회수 증가를 별도의 함수로 분리
