@@ -301,3 +301,9 @@ Swagger
   - test용 ResultActionsUtil 추가
 - 22.01.21
   - PostService의 findById에서 조회수 증가를 별도의 함수로 분리
+  - SimplePost dto에 postId 추가
+  - SimplePost, PostDetail에 댓글에 관련된 변수에 실제 데이터를 넣도록 수정
+  - PostRepository 수정
+    - 쿼리들에 fetchJoin 적용 
+    - findById의 쿼리 변경: comment 데이터를 join하여 select
+    - findByWriter 삭제

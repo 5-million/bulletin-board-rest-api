@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static xyz.fivemillion.bulletinboardapi.post.QPost.post;
+import static xyz.fivemillion.bulletinboardapi.post.comment.QComment.comment;
 import static xyz.fivemillion.bulletinboardapi.user.QUser.user;
 
 @Repository
@@ -26,32 +27,36 @@ public class JpaPostRepository implements PostRepository {
 
     @Override
     public Optional<Post> findById(long id) {
-        return Optional.ofNullable(em.find(Post.class, id));
+        return Optional.ofNullable(
+                query.selectFrom(post)
+                        .leftJoin(post.comments, comment)
+                        .fetchJoin()
+                        .leftJoin(post.writer, user)
+                        .fetchJoin()
+                        .where(post.id.eq(id))
+                        .fetchOne()
+        );
     }
 
     @Override
     public List<Post> findAll(long offset, long size) {
         return query.selectFrom(post)
-                .join(post.writer, user)
+                .leftJoin(post.writer, user)
+                .fetchJoin()
                 .orderBy(post.createAt.desc())
                 .offset(offset)
                 .limit(size)
                 .fetch();
     }
 
-    @Override
-    public List<Post> findByWriter(Long writerId) {
-        return query.selectFrom(post)
-                .join(post.writer, user)
-                .where(user.id.eq(writerId))
-                .fetch();
-    }
 
     @Override
     public List<Post> findByQuery(String q, long offset, long size) {
         return query.selectFrom(post)
-                .join(post.writer, user)
+                .leftJoin(post.writer, user)
+                .fetchJoin()
                 .where(post.title.contains(q).or(post.content.contains(q)))
+                .orderBy(post.createAt.desc())
                 .offset(offset)
                 .limit(size)
                 .fetch();

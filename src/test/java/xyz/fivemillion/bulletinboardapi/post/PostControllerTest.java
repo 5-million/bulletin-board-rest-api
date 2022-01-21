@@ -310,12 +310,14 @@ class PostControllerTest {
                 .build();
 
         Post post1 = Post.builder()
+                .id(1L)
                 .title("title1")
                 .content("content1")
                 .writer(user)
                 .build();
 
         Post post2 = Post.builder()
+                .id(2L)
                 .title("title2")
                 .content("content2")
                 .writer(user)
@@ -332,14 +334,16 @@ class PostControllerTest {
         //then
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.response").isArray())
-                .andExpect(jsonPath("$.response[0].title").value("title1"))
-                .andExpect(jsonPath("$.response[0].writer").value("display name"))
-                .andExpect(jsonPath("$.response[0].views").value("0"))
-                .andExpect(jsonPath("$.response[0].commentCount").value("0"))
-                .andExpect(jsonPath("$.response[1].title").value("title2"))
-                .andExpect(jsonPath("$.response[1].writer").value("display name"))
-                .andExpect(jsonPath("$.response[1].views").value("0"))
-                .andExpect(jsonPath("$.response[1].commentCount").value("0"));
+                .andExpect(jsonPath("$.response[0].postId").value(post1.getId()))
+                .andExpect(jsonPath("$.response[0].title").value(post1.getTitle()))
+                .andExpect(jsonPath("$.response[0].writer").value(post1.getWriter().getDisplayName()))
+                .andExpect(jsonPath("$.response[0].views").value(post1.getViews()))
+                .andExpect(jsonPath("$.response[0].commentCount").value(post1.getComments().size()))
+                .andExpect(jsonPath("$.response[1].postId").value(post2.getId()))
+                .andExpect(jsonPath("$.response[1].title").value(post2.getTitle()))
+                .andExpect(jsonPath("$.response[1].writer").value(post2.getWriter().getDisplayName()))
+                .andExpect(jsonPath("$.response[1].views").value(post2.getViews()))
+                .andExpect(jsonPath("$.response[1].commentCount").value(post2.getComments().size()));
     }
 
     @Test
@@ -413,6 +417,7 @@ class PostControllerTest {
                 .build();
 
         Post post = Post.builder()
+                .id(1L)
                 .title("title")
                 .content("content")
                 .writer(writer)
@@ -429,11 +434,12 @@ class PostControllerTest {
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getById"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.postId").value(post.getId()))
                 .andExpect(jsonPath("$.response.title").value(post.getTitle()))
                 .andExpect(jsonPath("$.response.content").value(post.getContent()))
                 .andExpect(jsonPath("$.response.writer").value(writer.getDisplayName()))
                 .andExpect(jsonPath("$.response.views").value(post.getViews()))
-                .andExpect(jsonPath("$.response.commentCount").value(0L))
+                .andExpect(jsonPath("$.response.commentCount").value(post.getComments().size()))
                 .andExpect(jsonPath("$.response.comments").isArray());
     }
 
@@ -843,12 +849,14 @@ class PostControllerTest {
                 .build();
 
         Post post1 = Post.builder()
+                .id(1L)
                 .title("title1")
                 .content("content1")
                 .writer(user)
                 .build();
 
         Post post2 = Post.builder()
+                .id(2L)
                 .title("title2")
                 .content("content2")
                 .writer(user)
@@ -876,14 +884,16 @@ class PostControllerTest {
                 .andExpect(handler().methodName("search"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.response").isArray())
+                .andExpect(jsonPath("$.response[0].postId").value(post1.getId()))
                 .andExpect(jsonPath("$.response[0].title").value(post1.getTitle()))
                 .andExpect(jsonPath("$.response[0].writer").value(user.getDisplayName()))
                 .andExpect(jsonPath("$.response[0].views").value(post1.getViews()))
-                .andExpect(jsonPath("$.response[0].commentCount").value("0"))
+                .andExpect(jsonPath("$.response[0].commentCount").value(post1.getComments().size()))
+                .andExpect(jsonPath("$.response[1].postId").value(post2.getId()))
                 .andExpect(jsonPath("$.response[1].title").value(post2.getTitle()))
                 .andExpect(jsonPath("$.response[1].writer").value(user.getDisplayName()))
                 .andExpect(jsonPath("$.response[1].views").value(post2.getViews()))
-                .andExpect(jsonPath("$.response[1].commentCount").value("0"));
+                .andExpect(jsonPath("$.response[1].commentCount").value(post2.getComments().size()));
 
         verify(postService, times(1)).findByQuery(queryCaptor.capture(), pageableCaptor.capture());
         assertEquals(query, queryCaptor.getValue());

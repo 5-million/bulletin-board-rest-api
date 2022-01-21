@@ -10,7 +10,6 @@ public interface PostRepository {
     void save(Post post);
     Optional<Post> findById(long id);
     List<Post> findAll(long offset, long size);
-    List<Post> findByWriter(Long writerId);
     List<Post> findByQuery(String q, long offset, long size);
     void delete(Post post);
 }
