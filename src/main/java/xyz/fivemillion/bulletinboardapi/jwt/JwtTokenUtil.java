@@ -85,7 +85,6 @@ public class JwtTokenUtil {
     }
 
     private Key createSigningKey() {
-        System.out.println(secret);
         byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(secret);
         return new SecretKeySpec(apiKeySecretBytes, SignatureAlgorithm.HS256.getJcaName());
     }
