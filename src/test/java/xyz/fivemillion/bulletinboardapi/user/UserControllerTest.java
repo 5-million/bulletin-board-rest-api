@@ -28,7 +28,6 @@ import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
 import xyz.fivemillion.bulletinboardapi.utils.ApiUtil;
 
-import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,8 +35,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static xyz.fivemillion.bulletinboardapi.utils.ResultActionsUtil.getError;
+import static xyz.fivemillion.bulletinboardapi.utils.ResultActionsUtil.getException;
 
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
@@ -165,7 +165,6 @@ class UserControllerTest {
     @Test
     @DisplayName("register fail: email 중복")
     void register_fail_email중복() throws Exception {
-
         //given
         UserRegisterRequest request = new UserRegisterRequest(
                 "abc@test.com",
@@ -185,7 +184,14 @@ class UserControllerTest {
         );
 
         //then
-        result.andExpect(status().isConflict());
+        result
+                .andExpect(handler().handlerType(UserController.class))
+                .andExpect(handler().methodName("register"))
+                .andExpect(jsonPath("$.error.message").value(Error.EMAIL_DUPLICATE.getMessage()))
+                .andExpect(status().isConflict());
+
+        assertEquals(DuplicateException.class, getException(result).getClass());
+        assertEquals(Error.EMAIL_DUPLICATE, getError(result));
     }
 
     @Test
@@ -206,7 +212,14 @@ class UserControllerTest {
         ResultActions result = performRegister(request);
 
         //then
-        result.andExpect(status().isConflict());
+        result
+                .andExpect(handler().handlerType(UserController.class))
+                .andExpect(handler().methodName("register"))
+                .andExpect(jsonPath("$.error.message").value(Error.DISPLAY_NAME_DUPLICATE.getMessage()))
+                .andExpect(status().isConflict());
+
+        assertEquals(DuplicateException.class, getException(result).getClass());
+        assertEquals(Error.DISPLAY_NAME_DUPLICATE, getError(result));
     }
 
     @Test
@@ -227,28 +240,14 @@ class UserControllerTest {
         ResultActions result = performRegister(request);
 
         //then
-        result.andExpectAll(status().isBadRequest());
-    }
+        result
+                .andExpect(handler().handlerType(UserController.class))
+                .andExpect(handler().methodName("register"))
+                .andExpect(jsonPath("$.error.message").value(Error.CONFIRM_PASSWORD_NOT_MATCH.getMessage()))
+                .andExpect(status().isBadRequest());
 
-    @Test
-    @DisplayName("register fail: 등록과정에서 PersistenceException 발생하는 경우")
-    void register_fail_throwPersistenceException() throws Exception {
-        //given
-        UserRegisterRequest request = new UserRegisterRequest(
-                "abc@test.com",
-                "password",
-                "password",
-                "display name"
-        );
-
-        given(userService.register(any(UserRegisterRequest.class))).willThrow(PersistenceException.class);
-
-        //when
-        ResultActions result = performRegister(request);
-
-        //then
-        result.andDo(print());
-        result.andExpect(status().is5xxServerError());
+        assertEquals(IllegalPasswordException.class, getException(result).getClass());
+        assertEquals(Error.CONFIRM_PASSWORD_NOT_MATCH, getError(result));
     }
 
     @Test
@@ -545,12 +544,13 @@ class UserControllerTest {
 
         //then
         result
+                .andExpect(handler().handlerType(UserController.class))
+                .andExpect(handler().methodName("login"))
                 .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.error.message").value(LoginException.LOGIN_FAIL_MESSAGE)
-                );
+                .andExpect(jsonPath("$.error.message").value(Error.USER_NOT_FOUND.getMessage()));
 
-        assertEquals(Error.USER_NOT_FOUND, ((CustomException) result.andReturn().getResolvedException()).getError());
+        assertEquals(LoginException.class, getException(result).getClass());
+        assertEquals(Error.USER_NOT_FOUND, getError(result));
     }
 
     @Test
@@ -559,7 +559,7 @@ class UserControllerTest {
         //given
         LoginRequest request = new LoginRequest("abc@test.com", "password");
         given(authenticationManager.authenticate(any(JwtAuthenticationToken.class))).willThrow(
-                new LoginException(Error.PASSWORD_NOT_MATCH)
+                new LoginException(Error.EMAIL_AND_PASSWORD_NOT_MATCH)
         );
 
         //when
@@ -567,12 +567,15 @@ class UserControllerTest {
 
         //then
         result
+                .andExpect(handler().handlerType(UserController.class))
+                .andExpect(handler().methodName("login"))
                 .andExpect(status().isBadRequest())
                 .andExpect(
-                        jsonPath("$.error.message").value(LoginException.LOGIN_FAIL_MESSAGE)
+                        jsonPath("$.error.message").value(Error.EMAIL_AND_PASSWORD_NOT_MATCH.getMessage())
                 );
 
-        assertEquals(Error.PASSWORD_NOT_MATCH, ((CustomException) result.andReturn().getResolvedException()).getError());
+        assertEquals(LoginException.class, getException(result).getClass());
+        assertEquals(Error.EMAIL_AND_PASSWORD_NOT_MATCH, getError(result));
     }
 
     @Test

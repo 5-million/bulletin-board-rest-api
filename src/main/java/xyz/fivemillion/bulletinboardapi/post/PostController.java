@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
-import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
+import xyz.fivemillion.bulletinboardapi.error.NotOwnerException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthentication;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostDetail;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
@@ -37,7 +37,8 @@ public class PostController {
             @Valid @RequestBody PostRegisterRequest request,
             @AuthenticationPrincipal JwtAuthentication authentication) {
         User writer = userService.findByEmail(authentication.getEmail());
-        if (writer == null) throw new UnAuthorizedException(Error.UNKNOWN_USER);
+        if (writer == null)
+            throw new NotFoundException(Error.UNKNOWN_USER, HttpStatus.UNAUTHORIZED);
 
         return success(HttpStatus.CREATED, new SimplePost(postService.register(writer, request)));
     }
@@ -57,7 +58,7 @@ public class PostController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<PostDetail> getById(@PathVariable final Long id) {
         if (id < 1)
-            throw new NotFoundException(Error.POST_NOT_FOUND);
+            throw new NotFoundException(Error.POST_NOT_FOUND, HttpStatus.NOT_FOUND);
 
         Post post = postService.findById(id);
         postService.increaseView(post);
@@ -68,13 +69,20 @@ public class PostController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable final Long id, @AuthenticationPrincipal JwtAuthentication authentication) {
         if (id < 1)
-            throw new NotFoundException(Error.POST_NOT_FOUND);
+            throw new NotFoundException(Error.UNKNOWN_POST, HttpStatus.BAD_REQUEST);
 
         User writer = userService.findByEmail(authentication.getEmail());
         if (writer == null)
-            throw new UnAuthorizedException(Error.UNKNOWN_USER);
+            throw new NotFoundException(Error.UNKNOWN_USER, HttpStatus.UNAUTHORIZED);
 
-        postService.delete(writer, id);
+        try {
+            postService.delete(writer, id);
+        } catch (NotFoundException e) {
+            throw new NotFoundException(Error.UNKNOWN_POST, HttpStatus.BAD_REQUEST);
+        } catch (NotOwnerException e) {
+            e.setHttpStatus(HttpStatus.FORBIDDEN);
+            throw e;
+        }
     }
 
     @GetMapping(path = "search")

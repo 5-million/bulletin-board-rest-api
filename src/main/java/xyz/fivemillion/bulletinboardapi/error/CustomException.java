@@ -5,10 +5,22 @@ import org.springframework.http.HttpStatus;
 public class CustomException extends RuntimeException {
 
     private final Error error;
+    private HttpStatus httpStatus;
+
+    public CustomException(Error error, HttpStatus httpStatus) {
+        super(error.getMessage());
+        this.error = error;
+        this.httpStatus = httpStatus;
+    }
 
     public CustomException(Error error) {
         super(error.getMessage());
         this.error = error;
+        this.httpStatus = null;
+    }
+
+    public void setHttpStatus(HttpStatus httpStatus) {
+        this.httpStatus = httpStatus;
     }
 
     public Error getError() {
@@ -19,11 +31,7 @@ public class CustomException extends RuntimeException {
         return error.getMessage();
     }
 
-    public String getErrorCode() {
-        return error.getCode();
-    }
-
     public HttpStatus getHttpStatus() {
-        return error.getStatus();
+        return httpStatus;
     }
 }

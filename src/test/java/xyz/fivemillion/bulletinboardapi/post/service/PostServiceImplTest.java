@@ -7,9 +7,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import xyz.fivemillion.bulletinboardapi.error.Error;
-import xyz.fivemillion.bulletinboardapi.error.ForbiddenException;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
-import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
+import xyz.fivemillion.bulletinboardapi.error.NotOwnerException;
+import xyz.fivemillion.bulletinboardapi.error.NullException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.repository.PostRepository;
@@ -32,7 +32,37 @@ class PostServiceImplTest {
     private PostServiceImpl postService;
 
     @Test
-    @DisplayName("register fail: 등록되지 않은 사용자의 등록")
+    @DisplayName("register fail: writer == null")
+    void register_fail_writerIsNull() {
+        //given
+        PostRegisterRequest request = new PostRegisterRequest("title", "content");
+
+        //when
+        NullException thrown = assertThrows(NullException.class, () -> postService.register(null, request));
+
+        //then
+        assertEquals(Error.UNKNOWN_USER, thrown.getError());
+    }
+
+    @Test
+    @DisplayName("register fail: request == null")
+    void register_fail_requestIsNull() {
+        //given
+        User writer = User.builder()
+                .email("abc@test.com")
+                .password("password")
+                .displayName("display name")
+                .build();
+
+        //when
+        NullException thrown = assertThrows(NullException.class, () -> postService.register(writer, null));
+
+        //then
+        assertEquals(Error.REQUEST_DTO_IS_NULL, thrown.getError());
+    }
+
+    @Test
+    @DisplayName("register fail: 등록되지 않은 사용자의 요청")
     void register_fail_등록되지않은사용자의등록() {
         //given
         User writer = User.builder()
@@ -42,35 +72,11 @@ class PostServiceImplTest {
                 .build();
 
         PostRegisterRequest request = new PostRegisterRequest("title", "content");
+        doThrow(new NullException(Error.UNKNOWN_USER)).when(postRepository).save(any(Post.class));
 
         //when
-        UnAuthorizedException thrown =
-                assertThrows(UnAuthorizedException.class, () -> postService.register(writer, request));
-
-        //then
-        assertEquals(Error.UNKNOWN_USER, thrown.getError());
-    }
-
-    @Test
-    @DisplayName("register fail: repository에서 IllegalStateException 발생(존재하지 않는 사용자)")
-    void register_fail_repositoryThrowIllegalStateException() {
-        //given
-        User writer = User.builder()
-                .id(1L)
-                .email("abc@test.com")
-                .password("password")
-                .displayName("display name")
-                .build();
-
-        PostRegisterRequest request = new PostRegisterRequest("title", "content");
-
-        doThrow(IllegalStateException.class).when(postRepository).save(any(Post.class));
-
-        //when
-        UnAuthorizedException thrown = assertThrows(
-                UnAuthorizedException.class,
-                () -> postService.register(writer, request)
-        );
+        NotFoundException thrown =
+                assertThrows(NotFoundException.class, () -> postService.register(writer, request));
 
         //then
         assertEquals(Error.UNKNOWN_USER, thrown.getError());
@@ -178,10 +184,10 @@ class PostServiceImplTest {
         given(postRepository.findById(1L)).willReturn(Optional.of(post));
 
         //when
-        ForbiddenException thrown = assertThrows(ForbiddenException.class, () -> postService.delete(requester, 1L));
+        NotOwnerException thrown = assertThrows(NotOwnerException.class, () -> postService.delete(requester, 1L));
 
         //then
-        assertEquals(Error.NOT_POST_WRITER, thrown.getError());
+        assertEquals(Error.NOT_POST_OWNER, thrown.getError());
     }
 
     @Test

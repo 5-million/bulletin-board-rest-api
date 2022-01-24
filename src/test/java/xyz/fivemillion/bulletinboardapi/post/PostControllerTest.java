@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.web.servlet.HttpEncodingAutoConfig
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
@@ -19,10 +20,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import xyz.fivemillion.bulletinboardapi.config.web.PageRequest;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
-import xyz.fivemillion.bulletinboardapi.error.CustomException;
 import xyz.fivemillion.bulletinboardapi.error.Error;
-import xyz.fivemillion.bulletinboardapi.error.ForbiddenException;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
+import xyz.fivemillion.bulletinboardapi.error.NotOwnerException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtTokenUtil;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.service.PostService;
@@ -41,6 +41,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static xyz.fivemillion.bulletinboardapi.config.web.PageRequest.DEFAULT_OFFSET_VALUE;
 import static xyz.fivemillion.bulletinboardapi.config.web.PageRequest.DEFAULT_SIZE_VALUE;
+import static xyz.fivemillion.bulletinboardapi.utils.ResultActionsUtil.getError;
+import static xyz.fivemillion.bulletinboardapi.utils.ResultActionsUtil.getException;
 
 @WebMvcTest(PostController.class)
 @Import(HttpEncodingAutoConfiguration.class)
@@ -94,6 +96,9 @@ class PostControllerTest {
         result
                 .andDo(print())
                 .andExpect(status().isUnauthorized());
+
+        assertEquals(NotFoundException.class, getException(result).getClass());
+        assertEquals(Error.UNKNOWN_USER, getError(result));
     }
 
     @Test
@@ -377,8 +382,8 @@ class PostControllerTest {
                 .andExpect(handler().methodName("getById"))
                 .andExpect(status().isNotFound());
 
-        assertEquals(NotFoundException.class, result.andReturn().getResolvedException().getClass());
-        assertEquals(Error.POST_NOT_FOUND.getMessage(), result.andReturn().getResolvedException().getMessage());
+        assertEquals(NotFoundException.class, getException(result).getClass());
+        assertEquals(Error.POST_NOT_FOUND, getError(result));
     }
 
     @Test
@@ -386,7 +391,7 @@ class PostControllerTest {
     void getById_fail_존재하지않는포스트() throws Exception {
         //given
         String url = BASE_URL + "/1";
-        given(postService.findById(anyLong())).willThrow(new NotFoundException(Error.POST_NOT_FOUND));
+        given(postService.findById(anyLong())).willThrow(new NotFoundException(Error.POST_NOT_FOUND, HttpStatus.NOT_FOUND));
 
         //when
         ResultActions result = mvc.perform(
@@ -401,7 +406,8 @@ class PostControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error.message").value(Error.POST_NOT_FOUND.getMessage()));
 
-        assertEquals(NotFoundException.class, result.andReturn().getResolvedException().getClass());
+        assertEquals(NotFoundException.class, getException(result).getClass());
+        assertEquals(Error.POST_NOT_FOUND, getError(result));
     }
 
     @Test
@@ -486,7 +492,8 @@ class PostControllerTest {
                 .andExpect(handler().methodName("delete"))
                 .andExpect(status().isUnauthorized());
 
-        assertEquals(Error.UNKNOWN_USER, ((CustomException) result.andReturn().getResolvedException()).getError());
+        assertEquals(NotFoundException.class, getException(result).getClass());
+        assertEquals(Error.UNKNOWN_USER, getError(result));
     }
 
     @Test
@@ -530,9 +537,10 @@ class PostControllerTest {
         result
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("delete"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
 
-        assertEquals(Error.POST_NOT_FOUND, ((CustomException) result.andReturn().getResolvedException()).getError());
+        assertEquals(NotFoundException.class, getException(result).getClass());
+        assertEquals(Error.UNKNOWN_POST, getError(result));
     }
 
     @Test
@@ -547,7 +555,8 @@ class PostControllerTest {
         String token = tokenUtil.generateJwtToken(writer);
 
         given(userService.findByEmail(anyString())).willReturn(writer);
-        doThrow(new NotFoundException(Error.POST_NOT_FOUND)).when(postService).delete(writer, 1L);
+        doThrow(new NotFoundException(Error.POST_NOT_FOUND, HttpStatus.NOT_FOUND))
+                .when(postService).delete(writer, 1L);
 
         //when
         ResultActions result = performDelete(1L, token);
@@ -556,9 +565,10 @@ class PostControllerTest {
         result
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("delete"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
 
-        assertEquals(Error.POST_NOT_FOUND, ((CustomException) result.andReturn().getResolvedException()).getError());
+        assertEquals(NotFoundException.class, getException(result).getClass());
+        assertEquals(Error.UNKNOWN_POST, getError(result));
     }
 
     @Test
@@ -570,22 +580,11 @@ class PostControllerTest {
                 .displayName("display name1")
                 .build();
 
-        User writer = User.builder()
-                .email("abc@test.com")
-                .displayName("display name")
-                .build();
-
-        Post post = Post.builder()
-                .id(1L)
-                .title("title")
-                .content("content")
-                .writer(writer)
-                .build();
-
         String token = tokenUtil.generateJwtToken(requester);
 
         given(userService.findByEmail(anyString())).willReturn(requester);
-        doThrow(new ForbiddenException(Error.NOT_POST_WRITER)).when(postService).delete(requester, 1L);
+        doThrow(new NotOwnerException(Error.NOT_POST_OWNER))
+                .when(postService).delete(requester, 1L);
 
         //when
         ResultActions result = performDelete(1L, token);
@@ -596,7 +595,8 @@ class PostControllerTest {
                 .andExpect(handler().methodName("delete"))
                 .andExpect(status().isForbidden());
 
-        assertEquals(Error.NOT_POST_WRITER, ((CustomException) result.andReturn().getResolvedException()).getError());
+        assertEquals(NotOwnerException.class, getException(result).getClass());
+        assertEquals(Error.NOT_POST_OWNER, getError(result));
     }
 
     @Test

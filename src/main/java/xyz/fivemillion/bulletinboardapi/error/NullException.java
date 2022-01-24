@@ -2,13 +2,13 @@ package xyz.fivemillion.bulletinboardapi.error;
 
 import org.springframework.http.HttpStatus;
 
-public class DuplicateException extends CustomException {
+public class NullException extends CustomException {
 
-    public DuplicateException(Error error, HttpStatus httpStatus) {
+    public NullException(Error error, HttpStatus httpStatus) {
         super(error, httpStatus);
     }
 
-    public DuplicateException(Error error) {
+    public NullException(Error error) {
         this(error, null);
     }
 }

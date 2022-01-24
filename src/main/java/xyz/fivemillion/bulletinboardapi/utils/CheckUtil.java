@@ -1,23 +1,26 @@
 package xyz.fivemillion.bulletinboardapi.utils;
 
-import xyz.fivemillion.bulletinboardapi.error.CustomException;
+import xyz.fivemillion.bulletinboardapi.error.BlankException;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.NullException;
 
 public class CheckUtil {
 
-    public static void checkNotNull(Object obj, Class<? extends CustomException> exception, Error error) throws Exception {
-        if (obj == null) {
-            throwException(exception, error);
-        }
+    /**
+     * @throws NullException If obj is null, a NullException(extends CustomException) is thrown.
+     */
+    public static void checkNotNull(Object obj, Error error) {
+        if (obj == null)
+            throw new NullException(error);
     }
 
-    public static void checkNotBlank(String obj, Class<? extends CustomException> exception, Error error) throws Exception {
-        checkNotNull(obj, exception, error);
-        if (obj.isBlank())
-            throwException(exception, error);
-    }
-
-    private static void throwException(Class<? extends CustomException> exception, Error error) throws Exception {
-        throw exception.getConstructor(Error.class).newInstance(error);
+    /**
+     * @throws NullException If str is null, a NullException(extends CustomException) is thrown.
+     * @throws BlankException if str is blank, a BlankException(extends CustomException) is thrown.
+     */
+    public static void checkNotBlank(String str, Error error) {
+        checkNotNull(str, error);
+        if (str.isBlank())
+            throw new BlankException(error);
     }
 }

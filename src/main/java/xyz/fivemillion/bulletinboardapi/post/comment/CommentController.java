@@ -6,7 +6,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
-import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthentication;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.comment.dto.CommentRegisterRequest;
@@ -35,7 +34,8 @@ public class CommentController {
             @RequestBody @Valid CommentRegisterRequest request,
             @AuthenticationPrincipal JwtAuthentication authentication) throws Exception {
         User writer = userService.findByEmail(authentication.getEmail());
-        if (writer == null) throw new UnAuthorizedException(Error.UNKNOWN_USER);
+        if (writer == null)
+            throw new NotFoundException(Error.UNKNOWN_USER, HttpStatus.UNAUTHORIZED);
 
         try {
             Post target = postService.findById(request.getPostId());
@@ -43,7 +43,7 @@ public class CommentController {
 
             return ApiUtil.success(HttpStatus.CREATED, new SimpleComment(comment));
         } catch (NotFoundException e) {
-            throw new NotFoundException(Error.UNKNOWN_POST);
+            throw new NotFoundException(Error.UNKNOWN_POST, HttpStatus.BAD_REQUEST);
         }
     }
 }

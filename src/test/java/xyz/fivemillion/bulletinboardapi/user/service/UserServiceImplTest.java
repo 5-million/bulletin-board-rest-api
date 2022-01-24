@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import xyz.fivemillion.bulletinboardapi.error.DuplicateException;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.IllegalPasswordException;
@@ -18,7 +17,6 @@ import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.utils.encrypt.BCryptEncryption;
 import xyz.fivemillion.bulletinboardapi.utils.encrypt.EncryptUtil;
 
-import javax.persistence.PersistenceException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,8 +49,6 @@ class UserServiceImplTest {
 
         //then
         assertEquals(Error.CONFIRM_PASSWORD_NOT_MATCH, exception.getError());
-        assertEquals(Error.CONFIRM_PASSWORD_NOT_MATCH.getStatus(), exception.getHttpStatus());
-        assertEquals(Error.CONFIRM_PASSWORD_NOT_MATCH.getCode(), exception.getErrorCode());
     }
 
     @Test
@@ -81,8 +77,7 @@ class UserServiceImplTest {
         );
 
         //then
-        assertEquals(Error.EMAIL_DUPLICATE.getStatus(), thrown.getHttpStatus());
-        assertEquals(Error.EMAIL_DUPLICATE.getCode(), thrown.getErrorCode());
+        assertEquals(Error.EMAIL_DUPLICATE, thrown.getError());
     }
 
     @Test
@@ -111,25 +106,7 @@ class UserServiceImplTest {
         );
 
         //then
-        assertEquals(Error.DISPLAY_NAME_DUPLICATE.getStatus(), thrown.getHttpStatus());
-        assertEquals(Error.DISPLAY_NAME_DUPLICATE.getCode(), thrown.getErrorCode());
-    }
-
-    @Test
-    @DisplayName("register fail: repository에서 중복 예외 던지는 경우")
-    void register_fail_repositoryThrownPersistenceException() {
-        //given
-        UserRegisterRequest request = new UserRegisterRequest(
-                "abc@example.com",
-                "password",
-                "password",
-                "display name"
-        );
-
-        doThrow(PersistenceException.class).when(userRepository).save(any(User.class));
-
-        //when
-        assertThrows(PersistenceException.class, () -> userService.register(request));
+        assertEquals(Error.DISPLAY_NAME_DUPLICATE, thrown.getError());
     }
 
     @Test
@@ -242,8 +219,7 @@ class UserServiceImplTest {
         LoginException thrown = assertThrows(LoginException.class, () -> userService.login(request));
 
         //then
-        assertEquals(HttpStatus.BAD_REQUEST, thrown.getHttpStatus());
-        assertEquals(Error.USER_NOT_FOUND.getCode(), thrown.getErrorCode());
+        assertEquals(Error.USER_NOT_FOUND, thrown.getError());
     }
 
     @Test
@@ -272,8 +248,7 @@ class UserServiceImplTest {
         );
 
         //then
-        assertEquals(HttpStatus.BAD_REQUEST, thrown.getHttpStatus());
-        assertEquals(Error.PASSWORD_NOT_MATCH.getCode(), thrown.getErrorCode());
+        assertEquals(Error.EMAIL_AND_PASSWORD_NOT_MATCH, thrown.getError());
     }
 
     @Test

@@ -5,6 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import xyz.fivemillion.bulletinboardapi.error.DuplicateException;
+import xyz.fivemillion.bulletinboardapi.error.IllegalPasswordException;
+import xyz.fivemillion.bulletinboardapi.error.LoginException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthenticationToken;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtTokenUtil;
 import xyz.fivemillion.bulletinboardapi.user.dto.*;
@@ -27,8 +30,17 @@ public class UserController {
     @PostMapping(path = "register")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResult<UserInfo> register(@Valid @RequestBody UserRegisterRequest request) {
-        User user = userService.register(request);
-        return success(HttpStatus.CREATED, new UserInfo(user));
+        try {
+            User user = userService.register(request);
+            return success(HttpStatus.CREATED, new UserInfo(user));
+        } catch (IllegalPasswordException e) {
+            e.setHttpStatus(HttpStatus.BAD_REQUEST);
+            throw e;
+        } catch (DuplicateException e) {
+            e.setHttpStatus(HttpStatus.CONFLICT);
+            throw e;
+        }
+
     }
 
     @PostMapping(path = "check/email")
@@ -48,11 +60,16 @@ public class UserController {
     @PostMapping(path = "login")
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<String> login(@Valid @RequestBody LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new JwtAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new JwtAuthenticationToken(request.getEmail(), request.getPassword())
+            );
 
-        final User user = (User) authentication.getDetails();
-        return success(HttpStatus.OK, jwtTokenUtil.generateJwtToken(user));
+            final User user = (User) authentication.getDetails();
+            return success(HttpStatus.OK, jwtTokenUtil.generateJwtToken(user));
+        } catch (LoginException e) {
+            e.setHttpStatus(HttpStatus.BAD_REQUEST);
+            throw e;
+        }
     }
 }

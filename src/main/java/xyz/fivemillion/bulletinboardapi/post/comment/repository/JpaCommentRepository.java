@@ -3,11 +3,14 @@ package xyz.fivemillion.bulletinboardapi.post.comment.repository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import xyz.fivemillion.bulletinboardapi.error.EntitySaveException;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.comment.Comment;
+import xyz.fivemillion.bulletinboardapi.user.User;
 
 import javax.persistence.EntityManager;
+
+import static xyz.fivemillion.bulletinboardapi.utils.CheckUtil.checkNotNull;
 
 @Repository
 @RequiredArgsConstructor
@@ -18,10 +21,8 @@ public class JpaCommentRepository implements CommentRepository {
 
     @Override
     public void save(Comment comment) {
-        try {
-            em.persist(comment);
-        } catch (IllegalStateException e) {
-            throw new EntitySaveException(Error.UNKNOWN_USER_OR_POST);
-        }
+        checkNotNull(em.find(User.class, comment.getWriter().getId()), Error.UNKNOWN_USER);
+        checkNotNull(em.find(Post.class, comment.getPost().getId()), Error.UNKNOWN_POST);
+        em.persist(comment);
     }
 }

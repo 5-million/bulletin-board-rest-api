@@ -6,8 +6,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import xyz.fivemillion.bulletinboardapi.error.EntitySaveException;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.NullException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.comment.Comment;
 import xyz.fivemillion.bulletinboardapi.user.User;
@@ -34,6 +34,7 @@ class JpaCommentRepositoryTest {
     void save_fail_UnknownUserRequest() {
         //given
         User writer = User.builder()
+                .id(-1L)
                 .email("abc@test.com")
                 .displayName("display name")
                 .build();
@@ -47,10 +48,10 @@ class JpaCommentRepositoryTest {
                 .build();
 
         //when
-        EntitySaveException thrown = assertThrows(EntitySaveException.class, () -> commentRepository.save(comment));
+        NullException thrown = assertThrows(NullException.class, () -> commentRepository.save(comment));
 
         //then
-        assertEquals(Error.UNKNOWN_USER_OR_POST, thrown.getError());
+        assertEquals(Error.UNKNOWN_USER, thrown.getError());
     }
 
     @Test
@@ -60,6 +61,7 @@ class JpaCommentRepositoryTest {
         User writer = em.find(User.class, 1L);
 
         Post post = Post.builder()
+                .id(-1L)
                 .title("title")
                 .content("content")
                 .writer(writer)
@@ -72,10 +74,10 @@ class JpaCommentRepositoryTest {
                 .build();
 
         //when
-        EntitySaveException thrown = assertThrows(EntitySaveException.class, () -> commentRepository.save(comment));
+        NullException thrown = assertThrows(NullException.class, () -> commentRepository.save(comment));
 
         //then
-        assertEquals(Error.UNKNOWN_USER_OR_POST, thrown.getError());
+        assertEquals(Error.UNKNOWN_POST, thrown.getError());
     }
 
     @Test

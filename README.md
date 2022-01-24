@@ -307,3 +307,6 @@ Swagger
     - 쿼리들에 fetchJoin 적용 
     - findById의 쿼리 변경: comment 데이터를 join하여 select
     - findByWriter 삭제
+- 22.01.22~24
+  - 전체적인 error 수정 (테스트 코드 포함)
+  - `해당 메소드를 호출하는 메소드와 별개로 단위별로 handling`

@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
-import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtTokenUtil;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.comment.dto.CommentRegisterRequest;
@@ -80,7 +79,7 @@ class CommentControllerTest {
                 .andExpect(handler().methodName("register"))
                 .andExpect(status().isUnauthorized());
 
-        assertEquals(UnAuthorizedException.class, getException(result).getClass());
+        assertEquals(NotFoundException.class, getException(result).getClass());
         assertEquals(Error.UNKNOWN_USER, getError(result));
     }
 

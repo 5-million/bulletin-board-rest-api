@@ -6,6 +6,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.NullException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
@@ -34,6 +36,7 @@ class JpaPostRepositoryTest {
     void write_fail_등록되지않은사용자의등록() {
         //given
         User writer = User.builder()
+                .id(-1L)
                 .email("abc@test.com")
                 .password("password")
                 .displayName("display name")
@@ -46,7 +49,10 @@ class JpaPostRepositoryTest {
                 .build();
 
         //when
-        assertThrows(IllegalStateException.class, () -> postRepository.save(post));
+        NullException thrown = assertThrows(NullException.class, () -> postRepository.save(post));
+
+        //then
+        assertEquals(Error.UNKNOWN_USER, thrown.getError());
     }
 
     @Test
@@ -119,34 +125,34 @@ class JpaPostRepositoryTest {
         assertEquals(97, result.get(result.size() - 1).getId());
     }
 
-    @Test
-    @DisplayName("findByWriter: empty")
-    void findByWriter_empty() {
-        //given
-        Long writerId = 5L;
-
-        //when
-        List<Post> result = postRepository.findByWriter(writerId);
-
-        //then
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    @DisplayName("findByWriter: present")
-    void findByWriter_present() {
-        //given
-        Long writerId = 3L;
-
-        //when
-        List<Post> result = postRepository.findByWriter(writerId);
-
-        //then
-        assertFalse(result.isEmpty());
-        for (Post res : result) {
-            assertEquals(res.getWriter().getId(), writerId);
-        }
-    }
+//    @Test
+//    @DisplayName("findByWriter: empty")
+//    void findByWriter_empty() {
+//        //given
+//        Long writerId = 5L;
+//
+//        //when
+//        List<Post> result = postRepository.findByWriter(writerId);
+//
+//        //then
+//        assertTrue(result.isEmpty());
+//    }
+//
+//    @Test
+//    @DisplayName("findByWriter: present")
+//    void findByWriter_present() {
+//        //given
+//        Long writerId = 3L;
+//
+//        //when
+//        List<Post> result = postRepository.findByWriter(writerId);
+//
+//        //then
+//        assertFalse(result.isEmpty());
+//        for (Post res : result) {
+//            assertEquals(res.getWriter().getId(), writerId);
+//        }
+//    }
 
     @Test
     @DisplayName("findByQuery")

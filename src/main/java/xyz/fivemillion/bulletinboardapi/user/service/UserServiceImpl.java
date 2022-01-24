@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
             throw new LoginException(Error.USER_NOT_FOUND);
 
         if (!encryptUtil.isMatch(password, user.getPassword()))
-            throw new LoginException(Error.PASSWORD_NOT_MATCH);
+            throw new LoginException(Error.EMAIL_AND_PASSWORD_NOT_MATCH);
 
         return user;
     }

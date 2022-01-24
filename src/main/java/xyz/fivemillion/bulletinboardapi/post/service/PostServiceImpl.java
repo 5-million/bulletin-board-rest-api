@@ -5,15 +5,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.fivemillion.bulletinboardapi.config.web.Pageable;
 import xyz.fivemillion.bulletinboardapi.error.Error;
-import xyz.fivemillion.bulletinboardapi.error.ForbiddenException;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
-import xyz.fivemillion.bulletinboardapi.error.UnAuthorizedException;
+import xyz.fivemillion.bulletinboardapi.error.NotOwnerException;
+import xyz.fivemillion.bulletinboardapi.error.NullException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.repository.PostRepository;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
 import java.util.List;
+
+import static xyz.fivemillion.bulletinboardapi.utils.CheckUtil.checkNotNull;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +27,8 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public Post register(User writer, PostRegisterRequest request) {
-        if (writer.getId() == null)
-            throw new UnAuthorizedException(Error.UNKNOWN_USER);
+        checkNotNull(writer, Error.UNKNOWN_USER);
+        checkNotNull(request, Error.REQUEST_DTO_IS_NULL);
 
         try {
             Post post = Post.builder()
@@ -38,8 +40,8 @@ public class PostServiceImpl implements PostService {
             postRepository.save(post);
 
             return post;
-        } catch (IllegalStateException e) {
-            throw new UnAuthorizedException(Error.UNKNOWN_USER);
+        } catch (NullException e) {
+            throw new NotFoundException(e.getError());
         }
     }
 
@@ -67,9 +69,9 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void delete(User writer, Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new NotFoundException(Error.POST_NOT_FOUND));
+        Post post = findById(postId);
         if (!writer.equals(post.getWriter()))
-            throw new ForbiddenException(Error.NOT_POST_WRITER);
+            throw new NotOwnerException(Error.NOT_POST_OWNER);
 
         postRepository.delete(post);
     }

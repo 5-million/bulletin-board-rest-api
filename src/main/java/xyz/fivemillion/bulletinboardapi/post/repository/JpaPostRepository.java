@@ -3,7 +3,10 @@ package xyz.fivemillion.bulletinboardapi.post.repository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.post.Post;
+import xyz.fivemillion.bulletinboardapi.user.User;
+import xyz.fivemillion.bulletinboardapi.utils.CheckUtil;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -22,6 +25,7 @@ public class JpaPostRepository implements PostRepository {
 
     @Override
     public void save(Post post) {
+        CheckUtil.checkNotNull(em.find(User.class, post.getWriter().getId()), Error.UNKNOWN_USER);
         em.persist(post);
     }
 
