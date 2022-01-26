@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
+import xyz.fivemillion.bulletinboardapi.error.NotOwnerException;
 import xyz.fivemillion.bulletinboardapi.error.NullException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.comment.Comment;
@@ -41,5 +42,17 @@ public class CommentServiceImpl implements CommentService {
         }
 
         return comment;
+    }
+
+    @Override
+    public void delete(User requester, long commentId) {
+        checkNotNull(requester, Error.UNKNOWN_USER);
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException(Error.UNKNOWN_COMMENT));
+
+        if (!requester.equals(comment.getWriter()))
+            throw new NotOwnerException(Error.NOT_COMMENT_OWNER);
+
+        commentRepository.delete(comment);
     }
 }

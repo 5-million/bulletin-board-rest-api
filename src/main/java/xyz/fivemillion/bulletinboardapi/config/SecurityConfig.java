@@ -71,7 +71,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeHttpRequests()
                 .antMatchers(HttpMethod.POST, BASE_URL + "/posts", BASE_URL + "/comment").authenticated()
-                .antMatchers(HttpMethod.DELETE, BASE_URL + "/posts/{id}").authenticated()
+                .antMatchers(HttpMethod.DELETE, BASE_URL + "/posts/{id}", BASE_URL + "/comment/{id}").authenticated()
                 .anyRequest().permitAll()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)

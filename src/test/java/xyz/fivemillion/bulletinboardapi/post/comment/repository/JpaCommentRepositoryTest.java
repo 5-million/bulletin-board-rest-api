@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import xyz.fivemillion.bulletinboardapi.error.Error;
+import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.error.NullException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.comment.Comment;
@@ -98,5 +99,37 @@ class JpaCommentRepositoryTest {
         //then
         assertTrue(writer.getComments().contains(comment));
         assertTrue(post.getComments().contains(comment));
+    }
+
+    @Test
+    @DisplayName("delete fail: 등록되지 않은 댓글에 대한 요청")
+    void delete_fail_unknownComment() {
+        //given
+        User writer = em.find(User.class, 2L);
+        Post post = em.find(Post.class, 2L);
+        Comment comment = Comment.builder().writer(writer).post(post).content("comment").build();
+
+        //when
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> commentRepository.delete(comment));
+
+        //then
+        assertEquals(Error.UNKNOWN_COMMENT, thrown.getError());
+    }
+
+    @Test
+    @DisplayName("delete success")
+    void delete_success() {
+        //given
+        User writer = em.find(User.class, 2L);
+        Post post = em.find(Post.class, 2L);
+        Comment comment = Comment.builder().writer(writer).post(post).content("comment").build();
+
+        em.persist(comment);
+
+        //when
+        commentRepository.delete(comment);
+
+        //then
+        assertFalse(em.contains(comment));
     }
 }

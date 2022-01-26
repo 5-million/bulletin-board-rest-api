@@ -7,4 +7,5 @@ import xyz.fivemillion.bulletinboardapi.user.User;
 public interface CommentService {
 
     Comment register(User writer, Post post, String content) throws Exception;
+    void delete(User requester, long commentId);
 }
