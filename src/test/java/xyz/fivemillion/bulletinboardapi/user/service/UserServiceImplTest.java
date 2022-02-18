@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import xyz.fivemillion.bulletinboardapi.error.DuplicateException;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.IllegalPasswordException;
@@ -14,8 +16,6 @@ import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.UserRepository;
 import xyz.fivemillion.bulletinboardapi.user.dto.LoginRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
-import xyz.fivemillion.bulletinboardapi.utils.encrypt.BCryptEncryption;
-import xyz.fivemillion.bulletinboardapi.utils.encrypt.EncryptUtil;
 
 import java.util.Optional;
 
@@ -27,9 +27,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
-    private BCryptEncryption bCryptEncryption = new BCryptEncryption();
+    private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
     @Mock UserRepository userRepository;
-    @Mock EncryptUtil encryptUtil;
+    @Mock PasswordEncoder passwordEncoder;
     @InjectMocks UserServiceImpl userService;
 
     @Test
@@ -121,7 +121,7 @@ class UserServiceImplTest {
 
         given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.empty());
         given(userRepository.findByDisplayName(request.getDisplayName())).willReturn(Optional.empty());
-        given(encryptUtil.encrypt("password")).willReturn(bCryptEncryption.encrypt("password"));
+        given(passwordEncoder.encode(anyString())).willReturn(bCryptPasswordEncoder.encode(request.getPassword()));
 
         //when
         User result = userService.register(request);
@@ -131,6 +131,7 @@ class UserServiceImplTest {
 
         assertEquals(request.getEmail(), result.getEmail());
         assertEquals(request.getDisplayName(), result.getDisplayName());
+        assertTrue(bCryptPasswordEncoder.matches(request.getPassword(), result.getPassword()));
         assertNotNull(result.getCreateAt());
     }
 
@@ -228,18 +229,15 @@ class UserServiceImplTest {
         //given
         LoginRequest request = new LoginRequest(
                 "abc@test.com",
-                "password"
+                "pessword"
         );
 
         given(userRepository.findByEmail(anyString())).willReturn(Optional.of(
                 User.builder()
                         .email("abc@test.com")
-                        .password(bCryptEncryption.encrypt("password"))
+                        .password(bCryptPasswordEncoder.encode("password"))
                         .build()
         ));
-
-        given(encryptUtil.isMatch(anyString(), anyString())).willReturn(false);
-
 
         //when
         LoginException thrown = assertThrows(
@@ -260,22 +258,21 @@ class UserServiceImplTest {
                 "password"
         );
 
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(
-                User.builder()
-                        .email("abc@test.com")
-                        .displayName("display name")
-                        .password(bCryptEncryption.encrypt("password"))
-                        .build()
-        ));
+        User user = User.builder()
+                .email(request.getEmail())
+                .displayName("display name")
+                .password(bCryptPasswordEncoder.encode(request.getPassword()))
+                .build();
 
-        given(encryptUtil.isMatch(anyString(), anyString())).willReturn(true);
+        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
 
         //when
         User result = userService.login(request);
 
         //then
-        assertEquals("abc@test.com", result.getEmail());
-        assertTrue(bCryptEncryption.isMatch("password", result.getPassword()));
+        assertEquals(request.getEmail(), result.getEmail());
+        assertTrue(bCryptPasswordEncoder.matches(request.getPassword(), result.getPassword()));
         assertNotNull(result.getDisplayName());
     }
 }

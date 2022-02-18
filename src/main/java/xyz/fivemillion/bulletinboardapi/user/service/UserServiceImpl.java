@@ -1,6 +1,7 @@
 package xyz.fivemillion.bulletinboardapi.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.fivemillion.bulletinboardapi.error.DuplicateException;
@@ -11,7 +12,6 @@ import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.UserRepository;
 import xyz.fivemillion.bulletinboardapi.user.dto.LoginRequest;
 import xyz.fivemillion.bulletinboardapi.user.dto.UserRegisterRequest;
-import xyz.fivemillion.bulletinboardapi.utils.encrypt.EncryptUtil;
 
 @Service
 @Transactional(readOnly = true)
@@ -19,7 +19,7 @@ import xyz.fivemillion.bulletinboardapi.utils.encrypt.EncryptUtil;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final EncryptUtil encryptUtil;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
         User user = User.builder()
                 .email(request.getEmail())
-                .password(encryptUtil.encrypt(request.getPassword()))
+                .password(passwordEncoder.encode(request.getPassword()))
                 .displayName(request.getDisplayName())
                 .build();
 
@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
         if (user == null)
             throw new LoginException(Error.USER_NOT_FOUND);
 
-        if (!encryptUtil.isMatch(password, user.getPassword()))
+        if (!passwordEncoder.matches(password, user.getPassword()))
             throw new LoginException(Error.EMAIL_AND_PASSWORD_NOT_MATCH);
 
         return user;

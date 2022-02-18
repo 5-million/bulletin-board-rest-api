@@ -313,3 +313,6 @@ Swagger
   - `해당 메소드를 호출하는 메소드와 별개로 단위별로 handling`
 - 22.01.26
   - comment 삭제 기능 추가
+- 22.02.18
+  - EncryptUtil 삭제
+  - UserServiceImpl 수정
