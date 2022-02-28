@@ -1,5 +1,6 @@
 package xyz.fivemillion.bulletinboardapi.post;
 
+import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 import static xyz.fivemillion.bulletinboardapi.utils.ApiUtil.success;
 
+@Api(tags = "포스트 관련 API")
 @RestController
 @RequestMapping("api/v1/posts")
 @RequiredArgsConstructor
@@ -31,6 +33,12 @@ public class PostController {
     private final PostService postService;
     private final UserService userService;
 
+    @ApiOperation(value = "포스트 등록")
+    @ApiResponses({
+            @ApiResponse(code = 201, message = "포스트 등록 성공"),
+            @ApiResponse(code = 400, message = "포스트 등록 실패"),
+            @ApiResponse(code = 401, message = "등록되지 않은 사용자의 요청")
+    })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResult<SimplePost> register(
@@ -43,6 +51,7 @@ public class PostController {
         return success(HttpStatus.CREATED, new SimplePost(postService.register(writer, request)));
     }
 
+    @ApiOperation(value = "모든 포스트 조회")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<List<SimplePost>> getAll(Pageable pageable) {
@@ -54,9 +63,14 @@ public class PostController {
         return success(HttpStatus.OK, posts);
     }
 
+    @ApiOperation(value = "포스트 상세 조회")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "포스트 조회 성공"),
+            @ApiResponse(code = 404, message = "등록되지 않은 포스트")
+    })
     @GetMapping(path = "{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<PostDetail> getById(@PathVariable final Long id) {
+    public ApiResult<PostDetail> getById(@ApiParam(name = "id", value = "조회 대상 포스트의 id", type = "long") @PathVariable final Long id) {
         if (id < 1)
             throw new NotFoundException(Error.POST_NOT_FOUND, HttpStatus.NOT_FOUND);
 
@@ -65,9 +79,17 @@ public class PostController {
         return success(HttpStatus.OK, new PostDetail(post));
     }
 
+    @ApiOperation(value = "포스트 삭제")
+    @ApiResponses({
+            @ApiResponse(code = 204, message = "포스트 삭제 성공"),
+            @ApiResponse(code = 400, message = "포스트 삭제 실패"),
+            @ApiResponse(code = 401, message = "등록되지 않은 사용자의 요청"),
+            @ApiResponse(code = 403, message = "포스트 작성자가 아닌 사용자의 요청"),
+    })
     @DeleteMapping(path = "{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable final Long id, @AuthenticationPrincipal JwtAuthentication authentication) {
+    public void delete(@ApiParam(name = "id", value = "삭제 대상 포스트의 id", type = "long") @PathVariable final Long id,
+                       @AuthenticationPrincipal JwtAuthentication authentication) {
         if (id < 1)
             throw new NotFoundException(Error.UNKNOWN_POST, HttpStatus.BAD_REQUEST);
 
@@ -85,6 +107,7 @@ public class PostController {
         }
     }
 
+    @ApiOperation(value = "포스트 검색")
     @GetMapping(path = "search")
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<List<SimplePost>> search(

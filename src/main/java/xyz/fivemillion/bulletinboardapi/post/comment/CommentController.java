@@ -1,5 +1,9 @@
 package xyz.fivemillion.bulletinboardapi.post.comment;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +25,7 @@ import xyz.fivemillion.bulletinboardapi.utils.ApiUtil.ApiResult;
 
 import javax.validation.Valid;
 
+@Api(tags = "댓글 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/comment")
@@ -30,6 +35,12 @@ public class CommentController {
     private final UserService userService;
     private final PostService postService;
 
+    @ApiOperation(value = "댓글 등록")
+    @ApiResponses({
+            @ApiResponse(code = 201, message = "댓글 등록 성공"),
+            @ApiResponse(code = 400, message = "댓글 등록 실패"),
+            @ApiResponse(code = 401, message = "등록되지 않은 사용자의 요청")
+    })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResult<SimpleComment> register(
@@ -49,6 +60,13 @@ public class CommentController {
         }
     }
 
+    @ApiOperation(value = "댓글 삭제")
+    @ApiResponses({
+            @ApiResponse(code = 204, message = "댓글 삭제 성공"),
+            @ApiResponse(code = 400, message = "댓글 삭제 실패"),
+            @ApiResponse(code = 401, message = "등록되지 않은 사용자의 요청"),
+            @ApiResponse(code = 403, message = "댓글 작성자가 아닌 사용자의 요청")
+    })
     @DeleteMapping(path = "{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
