@@ -107,3 +107,18 @@ INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (2
 INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (3, 'pqoalksdlkvzcxmn', 'rfkabjglkswfjthlkjzcvblawdf', 111, NOW(), NOW());
 INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (2, 'qweklnzxcfbmnh', 'nhonpogipwfd', 111, NOW(), NOW());
 INSERT INTO posts(writer, title, content, views, create_at, update_at) VALUES (1, 'poivkxcvhoknlkcx', 'foblkvjlbkabcfldk', 111, NOW(), NOW());
+
+INSERT INTO post_category(id, category, group_name, depth, parent_id) VALUES (0, '식품', '식품', 0, null),
+                                                                        (1, '홈인테리어', '홈인테리어', 0, null),
+                                                                        (2, '과일', '식품', 1, 0),
+                                                                        (3, '채소', '식품', 1, 0),
+                                                                        (4, '봄침구샵', '홈인테리어', 1, 1),
+                                                                        (5, '싱글하우스', '홈인테리어', 1, 1),
+                                                                        (6, '홈데코', '홈인테리어', 1, 1),
+                                                                        (7, '사과/배', '식품', 2, 2),
+                                                                        (8, '키위/참다래', '식품', 2, 2),
+                                                                        (9, '과일선물세트', '식품', 2, 2),
+                                                                        (10, '침구커버', '홈인테리어', 2, 4),
+                                                                        (11, '실내공기정화', '홈인테리어', 2, 4),
+                                                                        (12, '시계', '홈인테리어', 2, 6),
+                                                                        (13, '벽걸이시계', '홈인테리어', 3, 12);

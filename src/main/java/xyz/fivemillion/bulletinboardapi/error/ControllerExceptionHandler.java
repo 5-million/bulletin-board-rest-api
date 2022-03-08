@@ -2,6 +2,7 @@ package xyz.fivemillion.bulletinboardapi.error;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,7 +33,11 @@ public class ControllerExceptionHandler {
         return newResponse(exception);
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class
+    })
     public ResponseEntity<ApiUtil.ApiResult<?>> handleBadRequestException(Exception exception) {
         if (exception instanceof MethodArgumentNotValidException) {
             return newResponse(
@@ -41,6 +46,13 @@ public class ControllerExceptionHandler {
                             .getAllErrors()
                             .get(0)
                             .getDefaultMessage()
+            );
+        }
+
+        if (exception instanceof HttpMessageNotReadableException) {
+            return newResponse(
+                    HttpStatus.BAD_REQUEST,
+                    "check the data type."
             );
         }
 
