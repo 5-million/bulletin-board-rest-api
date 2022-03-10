@@ -55,4 +55,14 @@ public class PostCategory {
     public void addChild(PostCategory child) {
         this.child.add(child);
     }
+
+    public List<PostCategory> getNavigation() {
+        List<PostCategory> navigation;
+
+        if (this.getParent() == null) navigation = new ArrayList<>();
+        else navigation = this.getParent().getNavigation();
+
+        navigation.add(this);
+        return navigation;
+    }
 }
