@@ -53,11 +53,12 @@ public class Post {
     private LocalDateTime updateAt = LocalDateTime.now();
 
     @Builder
-    private Post(Long id, User writer, String title, String content) {
+    private Post(Long id, User writer, String title, String content, PostCategory category) {
         this.id = id;
         this.writer = writer;
         this.title = title;
         this.content = content;
+        this.category = category;
     }
 
     public void increaseView() {

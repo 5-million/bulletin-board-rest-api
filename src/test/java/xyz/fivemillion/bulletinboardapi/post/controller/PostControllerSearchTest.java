@@ -16,6 +16,7 @@ import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
 import xyz.fivemillion.bulletinboardapi.post.PostController;
+import xyz.fivemillion.bulletinboardapi.post.category.PostCategory;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
 import java.util.ArrayList;
@@ -24,13 +25,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static xyz.fivemillion.bulletinboardapi.config.web.PageRequest.DEFAULT_OFFSET_VALUE;
 import static xyz.fivemillion.bulletinboardapi.config.web.PageRequest.DEFAULT_SIZE_VALUE;
 import static xyz.fivemillion.bulletinboardapi.utils.ResultActionsUtil.getError;
@@ -244,11 +243,15 @@ public class PostControllerSearchTest extends PostControllerTest {
                 .displayName("display name")
                 .build();
 
+        PostCategory parent = PostCategory.builder().parent(null).id(0L).categoryName("식품").build();
+        PostCategory category = PostCategory.builder().parent(parent).id(2L).categoryName("과일").build();
+        List<PostCategory> expectedNavigation = category.getNavigation();
         Post post = Post.builder()
                 .id(1L)
                 .title("title")
                 .content("content")
                 .writer(writer)
+                .category(category)
                 .build();
 
         given(postService.findById(anyLong())).willReturn(post);
@@ -268,7 +271,12 @@ public class PostControllerSearchTest extends PostControllerTest {
                 .andExpect(jsonPath("$.response.writer").value(writer.getDisplayName()))
                 .andExpect(jsonPath("$.response.views").value(post.getViews()))
                 .andExpect(jsonPath("$.response.commentCount").value(post.getComments().size()))
-                .andExpect(jsonPath("$.response.comments").isArray());
+                .andExpect(jsonPath("$.response.comments").isArray())
+                .andExpect(jsonPath("$.response.navigation").isArray())
+                .andExpect(jsonPath("$.response.navigation[0].id").value(expectedNavigation.get(0).getId()))
+                .andExpect(jsonPath("$.response.navigation[0].category").value(expectedNavigation.get(0).getCategoryName()))
+                .andExpect(jsonPath("$.response.navigation[1].id").value(expectedNavigation.get(1).getId()))
+                .andExpect(jsonPath("$.response.navigation[1].category").value(expectedNavigation.get(1).getCategoryName()));
     }
 
     @Test
