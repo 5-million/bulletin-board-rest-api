@@ -12,7 +12,7 @@ import xyz.fivemillion.bulletinboardapi.error.NotOwnerException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthentication;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostDetail;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
-import xyz.fivemillion.bulletinboardapi.post.dto.SimplePost;
+import xyz.fivemillion.bulletinboardapi.post.dto.BasicPost;
 import xyz.fivemillion.bulletinboardapi.post.service.PostService;
 import xyz.fivemillion.bulletinboardapi.user.User;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
@@ -41,23 +41,23 @@ public class PostController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResult<SimplePost> register(
+    public ApiResult<BasicPost> register(
             @Valid @RequestBody PostRegisterRequest request,
             @AuthenticationPrincipal JwtAuthentication authentication) {
         User writer = userService.findByEmail(authentication.getEmail());
         if (writer == null)
             throw new NotFoundException(Error.UNKNOWN_USER, HttpStatus.UNAUTHORIZED);
 
-        return success(HttpStatus.CREATED, new SimplePost(postService.register(writer, request)));
+        return success(HttpStatus.CREATED, new BasicPost(postService.register(writer, request)));
     }
 
     @ApiOperation(value = "모든 포스트 조회")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<List<SimplePost>> getAll(Pageable pageable) {
-        List<SimplePost> posts = postService.findAll(pageable)
+    public ApiResult<List<BasicPost>> getAll(Pageable pageable) {
+        List<BasicPost> posts = postService.findAll(pageable)
                 .stream()
-                .map(SimplePost::new)
+                .map(BasicPost::new)
                 .collect(Collectors.toList());
 
         return success(HttpStatus.OK, posts);
@@ -110,15 +110,15 @@ public class PostController {
     @ApiOperation(value = "포스트 검색")
     @GetMapping(path = "search")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<List<SimplePost>> search(
+    public ApiResult<List<BasicPost>> search(
             @RequestParam(value = "q", required = false) final String query,
             final Pageable pageable) {
         if (query == null)
             return getAll(pageable);
 
-        List<SimplePost> posts = postService.findByQuery(query, pageable)
+        List<BasicPost> posts = postService.findByQuery(query, pageable)
                 .stream()
-                .map(SimplePost::new)
+                .map(BasicPost::new)
                 .collect(Collectors.toList());
 
         return success(HttpStatus.OK, posts);

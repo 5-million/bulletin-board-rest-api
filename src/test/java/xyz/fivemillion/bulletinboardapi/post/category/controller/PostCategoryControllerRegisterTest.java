@@ -194,10 +194,10 @@ public class PostCategoryControllerRegisterTest extends PostCategoryControllerTe
                 .andExpect(jsonPath("$.response.category").value(newCategory.getCategoryName()))
                 .andExpect(jsonPath("$.response.depth").value(newCategory.getDepth()))
                 .andExpect(jsonPath("$.response.group").value(newCategory.getGroupName()))
-                .andExpect(jsonPath("$.response.parent").isMap())
-                .andExpect(jsonPath("$.response.parent.id").value(parent.getId()))
-                .andExpect(jsonPath("$.response.parent.category").value(parent.getCategoryName()))
-                .andExpect(jsonPath("$.response.parent.depth").value(parent.getDepth()))
-                .andExpect(jsonPath("$.response.subCategory").isArray());
+                .andExpect(jsonPath("$.response.navigation").isArray())
+                .andExpect(jsonPath("$.response.navigation[0].id").value(parent.getId()))
+                .andExpect(jsonPath("$.response.navigation[0].category").value(parent.getCategoryName()))
+                .andExpect(jsonPath("$.response.navigation[0].depth").value(parent.getDepth()))
+                .andExpect(jsonPath("$.response.navigation[0].group").value(parent.getGroupName()));
     }
 }

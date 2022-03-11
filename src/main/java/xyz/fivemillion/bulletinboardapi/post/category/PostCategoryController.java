@@ -12,7 +12,8 @@ import xyz.fivemillion.bulletinboardapi.error.DuplicateException;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.jwt.JwtAuthentication;
-import xyz.fivemillion.bulletinboardapi.post.category.dto.PostCategoryDto;
+import xyz.fivemillion.bulletinboardapi.post.category.dto.BasicPostCategory;
+import xyz.fivemillion.bulletinboardapi.post.category.dto.PostCategoryHierarchy;
 import xyz.fivemillion.bulletinboardapi.post.category.dto.PostCategoryRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.post.category.service.PostCategoryService;
 import xyz.fivemillion.bulletinboardapi.user.service.UserService;
@@ -42,14 +43,14 @@ public class PostCategoryController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResult<PostCategoryDto> register(
+    public ApiResult<BasicPostCategory> register(
             @Valid @RequestBody PostCategoryRegisterRequest request,
             @AuthenticationPrincipal JwtAuthentication authentication) {
         if (userService.findByEmail(authentication.getEmail()) == null)
             throw new NotFoundException(Error.UNKNOWN_USER, HttpStatus.UNAUTHORIZED);
 
         try {
-            return success(HttpStatus.CREATED, new PostCategoryDto(postCategoryService.register(request)));
+            return success(HttpStatus.CREATED, new BasicPostCategory(postCategoryService.register(request)));
         } catch (DuplicateException e) {
             e.setHttpStatus(HttpStatus.CONFLICT);
             throw e;
@@ -62,12 +63,12 @@ public class PostCategoryController {
     @ApiOperation(value = "모든 카테고리 조회(계층구조)")
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<List<PostCategoryDto>> getAll() {
+    public ApiResult<List<PostCategoryHierarchy>> getAll() {
         return success(
                 HttpStatus.OK,
                 postCategoryService.findAll()
                         .stream()
-                        .map(PostCategoryDto::new).collect(Collectors.toList())
+                        .map(PostCategoryHierarchy::new).collect(Collectors.toList())
         );
     }
 

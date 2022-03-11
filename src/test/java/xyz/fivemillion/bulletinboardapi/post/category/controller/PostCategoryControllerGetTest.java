@@ -7,7 +7,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import xyz.fivemillion.bulletinboardapi.post.category.PostCategory;
 import xyz.fivemillion.bulletinboardapi.post.category.PostCategoryController;
-import xyz.fivemillion.bulletinboardapi.post.category.dto.PostCategoryDto;
+import xyz.fivemillion.bulletinboardapi.post.category.dto.PostCategoryHierarchy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,11 +64,11 @@ public class PostCategoryControllerGetTest extends PostCategoryControllerTest {
     void getAll_success() throws Exception {
         //given
         List<PostCategory> all = new ArrayList<>();
-        List<PostCategoryDto> expected = new ArrayList<>();
+        List<PostCategoryHierarchy> expected = new ArrayList<>();
         for (PostCategory pc : data.values())
             if (pc.getParent() == null) {
                 all.add(pc);
-                expected.add(new PostCategoryDto(pc));
+                expected.add(new PostCategoryHierarchy(pc));
             }
 
         given(postCategoryService.findAll()).willReturn(all);

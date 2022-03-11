@@ -135,11 +135,17 @@ public class PostControllerSearchTest extends PostControllerTest {
                 .displayName("display name")
                 .build();
 
+        PostCategory category = PostCategory.builder()
+                .categoryName("category")
+                .id(0L)
+                .build();
+
         Post post1 = Post.builder()
                 .id(1L)
                 .title("title1")
                 .content("content1")
                 .writer(user)
+                .category(category)
                 .build();
 
         Post post2 = Post.builder()
@@ -147,6 +153,7 @@ public class PostControllerSearchTest extends PostControllerTest {
                 .title("title2")
                 .content("content2")
                 .writer(user)
+                .category(category)
                 .build();
         List<Post> posts = new ArrayList<>();
         posts.add(post1);
@@ -272,11 +279,13 @@ public class PostControllerSearchTest extends PostControllerTest {
                 .andExpect(jsonPath("$.response.views").value(post.getViews()))
                 .andExpect(jsonPath("$.response.commentCount").value(post.getComments().size()))
                 .andExpect(jsonPath("$.response.comments").isArray())
-                .andExpect(jsonPath("$.response.navigation").isArray())
-                .andExpect(jsonPath("$.response.navigation[0].id").value(expectedNavigation.get(0).getId()))
-                .andExpect(jsonPath("$.response.navigation[0].category").value(expectedNavigation.get(0).getCategoryName()))
-                .andExpect(jsonPath("$.response.navigation[1].id").value(expectedNavigation.get(1).getId()))
-                .andExpect(jsonPath("$.response.navigation[1].category").value(expectedNavigation.get(1).getCategoryName()));
+                .andExpect(jsonPath("$.response.category.id").value(category.getId()))
+                .andExpect(jsonPath("$.response.category.category").value(category.getCategoryName()))
+                .andExpect(jsonPath("$.response.category.navigation").isArray())
+                .andExpect(jsonPath("$.response.category.navigation[0].id").value(expectedNavigation.get(0).getId()))
+                .andExpect(jsonPath("$.response.category.navigation[0].category").value(expectedNavigation.get(0).getCategoryName()))
+                .andExpect(jsonPath("$.response.category.navigation[1].id").value(expectedNavigation.get(1).getId()))
+                .andExpect(jsonPath("$.response.category.navigation[1].category").value(expectedNavigation.get(1).getCategoryName()));
     }
 
     @Test
@@ -498,11 +507,17 @@ public class PostControllerSearchTest extends PostControllerTest {
                 .displayName("display name")
                 .build();
 
+        PostCategory category = PostCategory.builder()
+                .categoryName("category")
+                .id(0L)
+                .build();
+
         Post post1 = Post.builder()
                 .id(1L)
                 .title("title1")
                 .content("content1")
                 .writer(user)
+                .category(category)
                 .build();
 
         Post post2 = Post.builder()
@@ -510,6 +525,7 @@ public class PostControllerSearchTest extends PostControllerTest {
                 .title("title2")
                 .content("content2")
                 .writer(user)
+                .category(category)
                 .build();
 
         List<Post> posts = new ArrayList<>();

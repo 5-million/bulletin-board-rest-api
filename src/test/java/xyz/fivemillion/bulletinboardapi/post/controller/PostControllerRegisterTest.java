@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import xyz.fivemillion.bulletinboardapi.error.Error;
 import xyz.fivemillion.bulletinboardapi.error.NotFoundException;
 import xyz.fivemillion.bulletinboardapi.post.Post;
+import xyz.fivemillion.bulletinboardapi.post.category.PostCategory;
 import xyz.fivemillion.bulletinboardapi.post.dto.PostRegisterRequest;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
@@ -151,12 +152,18 @@ public class PostControllerRegisterTest extends PostControllerTest {
         String token = tokenUtil.generateJwtToken(user);
         PostRegisterRequest request = new PostRegisterRequest("title", "content");
 
+        PostCategory category = PostCategory.builder()
+                .id(0L)
+                .categoryName("category")
+                .build();
+
         given(userService.findByEmail(anyString())).willReturn(user);
         given(postService.register(any(User.class), any(PostRegisterRequest.class))).willReturn(
                 Post.builder()
                         .title(request.getTitle())
                         .content(request.getTitle())
                         .writer(user)
+                        .category(category)
                         .build()
         );
 
@@ -174,6 +181,8 @@ public class PostControllerRegisterTest extends PostControllerTest {
                 .andExpect(jsonPath("$.response.writer").value("display name"))
                 .andExpect(jsonPath("$.response.views").value("0"))
                 .andExpect(jsonPath("$.response.commentCount").value("0"))
+                .andExpect(jsonPath("$.response.category.id").value(category.getId()))
+                .andExpect(jsonPath("$.response.category.category").value(category.getCategoryName()))
                 .andExpect(jsonPath("$.response.createAt").exists())
                 .andExpect(jsonPath("$.response.updateAt").exists());
     }
