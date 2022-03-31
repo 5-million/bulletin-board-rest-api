@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
+import xyz.fivemillion.bulletinboardapi.post.category.PostCategory;
 import xyz.fivemillion.bulletinboardapi.post.comment.Comment;
 import xyz.fivemillion.bulletinboardapi.user.User;
 
@@ -41,6 +42,10 @@ public class Post {
     @OneToMany(mappedBy = "post")
     private List<Comment> comments = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private PostCategory category;
+
     @Column
     private final LocalDateTime createAt = LocalDateTime.now();
 
@@ -48,11 +53,12 @@ public class Post {
     private LocalDateTime updateAt = LocalDateTime.now();
 
     @Builder
-    private Post(Long id, User writer, String title, String content) {
+    private Post(Long id, User writer, String title, String content, PostCategory category) {
         this.id = id;
         this.writer = writer;
         this.title = title;
         this.content = content;
+        this.category = category;
     }
 
     public void increaseView() {

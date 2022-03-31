@@ -8,25 +8,14 @@ import java.time.LocalDateTime;
 
 @Getter @Setter
 public class SimplePost {
-    private Long postId;
-    private String title;
-    private String writer;
-    private Long views;
-    private Integer commentCount;
-    private LocalDateTime createAt;
-    private LocalDateTime updateAt;
 
-    public SimplePost() {/*Empty*/}
-
-    public SimplePost(Long postId, String title, String writer, Long views, Integer commentCount, LocalDateTime createAt, LocalDateTime updateAt) {
-        this.postId = postId;
-        this.title = title;
-        this.writer = writer;
-        this.views = views;
-        this.commentCount = commentCount;
-        this.createAt = createAt;
-        this.updateAt = updateAt;
-    }
+    protected Long postId;
+    protected String title;
+    protected String writer;
+    protected Long views;
+    protected Integer commentCount;
+    protected LocalDateTime createAt;
+    protected LocalDateTime updateAt;
 
     public SimplePost(Post post) {
         this.postId = post.getId();
